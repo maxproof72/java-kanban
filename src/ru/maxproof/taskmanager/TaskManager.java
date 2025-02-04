@@ -36,6 +36,7 @@ public class TaskManager {
         Subtask registeredSubtask = new Subtask(epic.getId(), ++TaskId, draftSubtask);
         subtaskRegistry.put(registeredSubtask.getId(), registeredSubtask);
         epic.registerSubtask(registeredSubtask.getId());
+        epic.setStatus(estimateEpicStatus(epic));
         return registeredSubtask;
     }
 
