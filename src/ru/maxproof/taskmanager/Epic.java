@@ -61,10 +61,15 @@ public class Epic extends Task {
 
     /**
      * Регистрация подзадачи (запускается менеджером)
-     * @param subtask Подзадача
+     * @param id Id подзадачи
      */
-    void registerSubtask(Subtask subtask) {
-        subtaskIds.add(subtask.getId());
+    void registerSubtask(int id) {
+        subtaskIds.add(id);
+    }
+
+
+    boolean unregisterSubtask(int id) {
+        return subtaskIds.remove((Integer) id);
     }
 
 
@@ -82,5 +87,6 @@ public class Epic extends Task {
      */
     void clearSubtasks() {
         subtaskIds.clear();
+        setStatus(TaskStatus.NEW);
     }
 }

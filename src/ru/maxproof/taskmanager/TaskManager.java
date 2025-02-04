@@ -35,7 +35,7 @@ public class TaskManager {
 
         Subtask registeredSubtask = new Subtask(epic.getId(), ++TaskId, draftSubtask);
         subtaskRegistry.put(registeredSubtask.getId(), registeredSubtask);
-        epic.registerSubtask(registeredSubtask);
+        epic.registerSubtask(registeredSubtask.getId());
         return registeredSubtask;
     }
 
@@ -211,6 +211,10 @@ public class TaskManager {
      */
     public void removeSubtask(int id) {
         subtaskRegistry.remove(id);
+        epicRegistry.values().forEach(epic -> {
+            if (epic.unregisterSubtask(id))
+                epic.setStatus(estimateEpicStatus(epic));
+        });
     }
 
 
