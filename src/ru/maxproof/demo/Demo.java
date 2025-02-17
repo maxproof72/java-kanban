@@ -7,8 +7,15 @@ import ru.maxproof.taskmanager.*;
  */
 public class Demo {
 
-    private final TaskManager taskManager = new TaskManager();
+    private final TaskManager taskManager;
 
+    /**
+     * Конструктор демо-модуля
+     * @param taskManager Интерфейс менеджера задач
+     */
+    public Demo(TaskManager taskManager) {
+        this.taskManager = taskManager;
+    }
 
     /**
      * Печать общего перечня задач в структурном виде
@@ -40,12 +47,35 @@ public class Demo {
     void printByStatus() {
 
         System.out.println("Перечень задач (группировка по статусу)");
+        System.out.println("------------------------------------------------");
         for (var status: TaskStatus.values()) {
             System.out.println(status);
             taskManager.getEntireTaskList().stream()
                     .filter(task -> task.getStatus() == status)
                     .forEach(task -> System.out.println(" * " + task));
         }
+        System.out.println();
+    }
+
+    /**
+     * Печать задач по типу
+     */
+    public void printByType() {
+
+        System.out.println();
+        System.out.println("Задачи по типу");
+        System.out.println("------------------------------------------------");
+        System.out.println("Задачи:");
+        taskManager.getTasks().forEach(System.out::println);
+        System.out.println("Эпики:");
+        taskManager.getEpics().forEach(epic -> {
+            System.out.println(epic);
+            taskManager.getEpicSubtasks(epic).forEach(sub -> System.out.println("--> " + sub));
+        });
+        System.out.println("Подзадачи:");
+        taskManager.getSubtasks().forEach(System.out::println);
+        System.out.println("История:");
+        taskManager.getHistory().forEach(System.out::println);
         System.out.println();
     }
 
@@ -104,9 +134,12 @@ public class Demo {
         System.out.println("Изменение статуса первой подзадачи и обновление");
         subRestaurant = new Subtask(subRestaurant, TaskStatus.DONE);
         taskManager.updateSubtask(subRestaurant);
+
         printStructured();
 
         printByStatus();
+
+        printByType();
 
         System.out.println("Удаление задачи " + taskGotoPracticum);
         taskManager.removeTask(taskGotoPracticum.getId());
