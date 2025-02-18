@@ -66,16 +66,16 @@ public class Demo {
         System.out.println("Задачи по типу");
         System.out.println("------------------------------------------------");
         System.out.println("Задачи:");
-        taskManager.getTasks().forEach(System.out::println);
+        taskManager.getTasks().forEach(task -> System.out.println(" * " + task));
         System.out.println("Эпики:");
         taskManager.getEpics().forEach(epic -> {
             System.out.println(epic);
-            taskManager.getEpicSubtasks(epic).forEach(sub -> System.out.println("--> " + sub));
+            taskManager.getEpicSubtasks(epic).forEach(sub -> System.out.println(" --> " + sub));
         });
         System.out.println("Подзадачи:");
-        taskManager.getSubtasks().forEach(System.out::println);
+        taskManager.getSubtasks().forEach(sub -> System.out.println(" * " + sub));
         System.out.println("История:");
-        taskManager.getHistory().forEach(System.out::println);
+        taskManager.getHistory().forEach(item -> System.out.println(" * " + item));
         System.out.println();
     }
 
@@ -138,6 +138,11 @@ public class Demo {
         printStructured();
 
         printByStatus();
+
+        taskManager.getTask(taskGotoPracticum.getId());
+        taskManager.getEpic(epicJubilee.getId());
+        taskManager.getSubtask(subRestaurant.getId());
+        taskManager.getSubtask(subOrder.getId());
 
         printByType();
 
