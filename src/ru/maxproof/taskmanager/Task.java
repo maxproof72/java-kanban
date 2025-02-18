@@ -4,12 +4,6 @@ import java.util.Objects;
 
 public class Task {
 
-    /**
-     * Идентификатор для незарегистрированной задачи (до передачи менеджеру задач)
-     */
-    public static final int DRAFT_TASK_ID = 0;
-
-
     // region Fields
 
     private final int id;
@@ -37,12 +31,20 @@ public class Task {
     }
 
     /**
+     * Конструктор копирования
+     * @param task Исходный объект
+     */
+    Task(Task task) {
+        this(task.id, task.name, task.description, task.status);
+    }
+
+    /**
      * Конструктор создания черновой задачи со статусом NEW
      * @param name Наименование задачи
      * @param description Краткое описание задачи
      */
     public Task(String name, String description) {
-        this(DRAFT_TASK_ID, name, description, TaskStatus.NEW);
+        this(TaskManager.DRAFT_TASK_ID, name, description, TaskStatus.NEW);
     }
 
     /**
@@ -114,13 +116,15 @@ public class Task {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return id == task.id;
+        return (id == TaskManager.DRAFT_TASK_ID || task.id == TaskManager.DRAFT_TASK_ID || id == task.id) &&
+               Objects.equals(name, task.name) &&
+               Objects.equals(description, task.description) &&
+               status == task.status;
     }
-
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hash(id, name, description, status);
     }
 
     @Override

@@ -19,37 +19,41 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Task createTask(Task draftTask) {
+    public int createTask(Task draftTask) {
 
         Task registeredTask = new Task(++TaskId, draftTask);
         taskRegistry.put(registeredTask.getId(), registeredTask);
-        return registeredTask;
+        return registeredTask.getId();
     }
 
 
     @Override
-    public Subtask createSubtask(Epic epic, Subtask draftSubtask) {
+    public int createSubtask(int epicId, Subtask draftSubtask) {
 
-        Subtask registeredSubtask = new Subtask(epic.getId(), ++TaskId, draftSubtask);
+        Epic epic = epicRegistry.get(epicId);
+        if (epic == null) {
+            return TaskManager.DRAFT_TASK_ID;
+        }
+        Subtask registeredSubtask = new Subtask(epicId, ++TaskId, draftSubtask);
         subtaskRegistry.put(registeredSubtask.getId(), registeredSubtask);
         epic.registerSubtask(registeredSubtask.getId());
         epic.setStatus(estimateEpicStatus(epic));
-        return registeredSubtask;
+        return registeredSubtask.getId();
     }
 
 
     @Override
-    public Epic createEpic(Epic draftEpic) {
+    public int createEpic(Epic draftEpic) {
 
         Epic registeredEpic = new Epic(++TaskId, draftEpic);
         epicRegistry.put(registeredEpic.getId(), registeredEpic);
-        return registeredEpic;
+        return registeredEpic.getId();
     }
 
 
     @Override
     public void updateTask(Task task) {
-        if (task.getId() != Task.DRAFT_TASK_ID && taskRegistry.containsKey(task.getId())) {
+        if (task.getId() != TaskManager.DRAFT_TASK_ID && taskRegistry.containsKey(task.getId())) {
             taskRegistry.put(task.getId(), task);
         }
     }
@@ -57,7 +61,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateSubtask(Subtask subtask) {
-        if (subtask.getId() != Task.DRAFT_TASK_ID && subtaskRegistry.containsKey(subtask.getId())) {
+        if (subtask.getId() != TaskManager.DRAFT_TASK_ID && subtaskRegistry.containsKey(subtask.getId())) {
             subtaskRegistry.put(subtask.getId(), subtask);
 
             // Обновление статуса родительского epic
@@ -69,7 +73,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateEpic(Epic epic) {
-        if (epic.getId() != Task.DRAFT_TASK_ID && epicRegistry.containsKey(epic.getId())) {
+        if (epic.getId() != TaskManager.DRAFT_TASK_ID && epicRegistry.containsKey(epic.getId())) {
             epicRegistry.put(epic.getId(), epic);
         }
     }
@@ -131,7 +135,7 @@ public class InMemoryTaskManager implements TaskManager {
     public Optional<Task> getTask(int id) {
         Task task = taskRegistry.get(id);
         if (task != null) {
-            historyManager.addTask(task);
+            historyManager.addTask(new Task(task));
         }
         return Optional.ofNullable(task);
     }
@@ -141,7 +145,7 @@ public class InMemoryTaskManager implements TaskManager {
     public Optional<Subtask> getSubtask(int id) {
         Subtask subtask = subtaskRegistry.get(id);
         if (subtask != null) {
-            historyManager.addTask(subtask);
+            historyManager.addTask(new Subtask(subtask));
         }
         return Optional.ofNullable(subtask);
     }
@@ -151,7 +155,7 @@ public class InMemoryTaskManager implements TaskManager {
     public Optional<Epic> getEpic(int id) {
         Epic epic = epicRegistry.get(id);
         if (epic != null) {
-            historyManager.addTask(epic);
+            historyManager.addTask(new Epic(epic));
         }
         return Optional.ofNullable(epic);
     }

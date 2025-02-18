@@ -26,6 +26,13 @@ public class Epic extends Task {
         this.subtaskIds.addAll(subtaskIds);
     }
 
+    /**
+     * Конструктор копирования
+     * @param epic Исходный объект
+     */
+    Epic(Epic epic) {
+        this(epic.getId(), epic.getName(), epic.getDescription(), epic.getStatus(), epic.getSubtasks());
+    }
 
     /**
      * Конструктор подзадачи, хранимой в менеджере задач.

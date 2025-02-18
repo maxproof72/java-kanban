@@ -6,25 +6,30 @@ import java.util.Optional;
 public interface TaskManager {
 
     /**
+     * Идентификатор для незарегистрированной задачи (до передачи менеджеру задач)
+     */
+    int DRAFT_TASK_ID = 0;
+
+    /**
      * Регистрирует черновую задачу и возвращает ее идентификатор в реестре
      * @param draftTask Черновая простая задача
      * @return Зарегистрированная задача с реальным идентификатором
      */
-    Task createTask(Task draftTask);
+    int createTask(Task draftTask);
 
     /**
      * Регистрирует черновую подзадачу и возвращает ее идентификатор в реестре
      * @param draftSubtask Черновая подзадача
      * @return Зарегистрированная подзадача с реальным идентификатором
      */
-    Subtask createSubtask(Epic epic, Subtask draftSubtask);
+    int createSubtask(int epicId, Subtask draftSubtask);
 
     /**
      * Регистрирует черновую сложную задачу и возвращает ее идентификатор в реестре
      * @param draftEpic Черновая сложная задача
      * @return Зарегистрированная Epic задача с реальным идентификатором
      */
-    Epic createEpic(Epic draftEpic);
+    int createEpic(Epic draftEpic);
 
     /**
      * Обновляет простую задачу с указанным id.

@@ -20,6 +20,13 @@ public class Subtask extends Task {
         this.epicId = epicId;
     }
 
+    /**
+     * Конструктор копирования
+     * @param subtask Исходный объект
+     */
+    Subtask(Subtask subtask) {
+        this(subtask.epicId, subtask.getId(), subtask.getName(), subtask.getDescription(), subtask.getStatus());
+    }
 
     /**
      * Конструктор подзадачи, хранимой в менеджере задач.
@@ -40,7 +47,7 @@ public class Subtask extends Task {
      * @param description Описание подзадачи
      */
     public Subtask(String name, String description) {
-        this(Task.DRAFT_TASK_ID, Task.DRAFT_TASK_ID, name, description, TaskStatus.NEW);
+        this(TaskManager.DRAFT_TASK_ID, TaskManager.DRAFT_TASK_ID, name, description, TaskStatus.NEW);
     }
 
 

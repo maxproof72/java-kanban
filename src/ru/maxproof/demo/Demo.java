@@ -88,11 +88,12 @@ public class Demo {
         System.out.println("Running Demo");
 
         System.out.println("Добавление простой задачи");
-        Task taskGotoPracticum = taskManager.createTask(new Task(
+        final int idGotoPracticum = taskManager.createTask(new Task(
                 "Сделать важное", "Записаться на курсы Yandex.Practicum"));      // задним числом
         printStructured();
 
         System.out.println("Изменение наименования задачи и обновление");
+        Task taskGotoPracticum = taskManager.getTask(idGotoPracticum).orElseThrow();
         taskGotoPracticum = new Task(taskGotoPracticum, "Важное дело", taskGotoPracticum.getDescription());
         taskManager.updateTask(taskGotoPracticum);
         printStructured();
@@ -107,42 +108,39 @@ public class Demo {
         printStructured();
 
         System.out.println("Добавление Epic задачи");
-        Epic epicJubilee = taskManager.createEpic(new Epic(
+        final int idJubilee = taskManager.createEpic(new Epic(
                 "Подготовиться к юбилею", "Подготовиться к празднованию юбилея"));
         printStructured();
 
         System.out.println("Добавление подзадач");
-        Subtask subRestaurant =
-            taskManager.createSubtask(epicJubilee,
+        final int idRestaurant =
+            taskManager.createSubtask(idJubilee,
                 new Subtask("Ресторан", "Выбрать ресторан"));
-        taskManager.createSubtask(epicJubilee, new Subtask(
+        taskManager.createSubtask(idJubilee, new Subtask(
                 "Гости", "Определиться с составом гостей"));
-        taskManager.createSubtask(epicJubilee, new Subtask(
+        taskManager.createSubtask(idJubilee, new Subtask(
                 "Меню", "Определиться с меню"));
-        taskManager.createSubtask(epicJubilee, new Subtask(
+        taskManager.createSubtask(idJubilee, new Subtask(
                 "Согласование", "Все согласовать с именинником"));
-        Subtask subOrder =
-            taskManager.createSubtask(epicJubilee, new Subtask(
+        final int idOrder =
+            taskManager.createSubtask(idJubilee, new Subtask(
                 "Заказ", "Заказать выбранный ресторан"));
         printStructured();
 
         System.out.println("Изменение наименования последней подзадачи и обновление");
+        Subtask subOrder = taskManager.getSubtask(idOrder).orElseThrow();
         subOrder = new Subtask(subOrder, "Бронирование", "Бронирование банкетного зала");
         taskManager.updateSubtask(subOrder);
         printStructured();
 
         System.out.println("Изменение статуса первой подзадачи и обновление");
+        Subtask subRestaurant = taskManager.getSubtask(idRestaurant).orElseThrow();
         subRestaurant = new Subtask(subRestaurant, TaskStatus.DONE);
         taskManager.updateSubtask(subRestaurant);
 
         printStructured();
 
         printByStatus();
-
-        taskManager.getTask(taskGotoPracticum.getId());
-        taskManager.getEpic(epicJubilee.getId());
-        taskManager.getSubtask(subRestaurant.getId());
-        taskManager.getSubtask(subOrder.getId());
 
         printByType();
 
