@@ -14,8 +14,7 @@ public class Main {
         if (List.of(args).contains("--demo")) {
             Demo demo = new Demo(Managers.getDefault());
             demo.run();
-        }
-        else {
+        } else {
             var userScenario = new UserScenario();
             userScenario.run();
         }
