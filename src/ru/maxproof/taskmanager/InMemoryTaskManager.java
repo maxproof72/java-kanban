@@ -229,8 +229,8 @@ public class InMemoryTaskManager implements TaskManager {
     private TaskStatus estimateEpicStatus(Epic epic) {
 
         var subtasks = getEpicSubtasks(epic);
-        return subtasks.stream().allMatch(Task::isNew)? TaskStatus.NEW:
-                subtasks.stream().allMatch(Task::isDone)? TaskStatus.DONE:
+        return subtasks.stream().allMatch(Task::isNew) ? TaskStatus.NEW :
+                subtasks.stream().allMatch(Task::isDone) ? TaskStatus.DONE :
                         TaskStatus.IN_PROGRESS;
     }
 
