@@ -1,6 +1,5 @@
 package ru.maxproof.taskmanager;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -8,18 +7,26 @@ import java.util.List;
  */
 public class InMemoryHistoryManager implements HistoryManager {
 
-    private final ArrayList<Task> history = new ArrayList<>();
+    private final HistoryNodeList history = new HistoryNodeList();
+
 
     @Override
-    public void addTask(Task task) {
+    public void add(Task task) {
+        history.addTask(task);
+    }
 
-        history.add(task);
-        while (history.size() > 10)
-            history.removeFirst();
+    @Override
+    public void remove(int id) {
+        history.removeTaskById(id);
     }
 
     @Override
     public List<Task> getHistory() {
-        return history;
+        return history.stream().toList();
     }
+
+//    @Override
+//    public int size() {
+//        return history.size();
+//    }
 }

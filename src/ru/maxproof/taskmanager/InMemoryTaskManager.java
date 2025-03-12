@@ -55,6 +55,10 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateTask(Task task) {
         if (task.getId() != TaskManager.DRAFT_TASK_ID && taskRegistry.containsKey(task.getId())) {
             taskRegistry.put(task.getId(), task);
+            // 2025-03-12 maxproof new
+            // Обновление менеджера истории.
+            // Иначе, в истории будет храниться неактуальная версия задачи.
+            historyManager.add(task);
         }
     }
 
@@ -63,6 +67,10 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateSubtask(Subtask subtask) {
         if (subtask.getId() != TaskManager.DRAFT_TASK_ID && subtaskRegistry.containsKey(subtask.getId())) {
             subtaskRegistry.put(subtask.getId(), subtask);
+            // 2025-03-12 maxproof new
+            // Обновление менеджера истории.
+            // Иначе, в истории будет храниться неактуальная версия задачи.
+            historyManager.add(subtask);
 
             // Обновление статуса родительского epic
             Epic epic = epicRegistry.get(subtask.getEpicId());
@@ -75,6 +83,10 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateEpic(Epic epic) {
         if (epic.getId() != TaskManager.DRAFT_TASK_ID && epicRegistry.containsKey(epic.getId())) {
             epicRegistry.put(epic.getId(), epic);
+            // 2025-03-12 maxproof new
+            // Обновление менеджера истории.
+            // Иначе, в истории будет храниться неактуальная версия задачи.
+            historyManager.add(epic);
         }
     }
 
@@ -135,7 +147,11 @@ public class InMemoryTaskManager implements TaskManager {
     public Optional<Task> getTask(int id) {
         Task task = taskRegistry.get(id);
         if (task != null) {
-            historyManager.addTask(new Task(task));
+            // 2025-03-12 maxproof fix
+            // Вследствие того, что в истории будет храниться только одна последняя
+            // версия задачи, нет смысла делать копию её состояния
+//            historyManager.add(new Task(task));
+            historyManager.add(task);
         }
         return Optional.ofNullable(task);
     }
@@ -145,7 +161,11 @@ public class InMemoryTaskManager implements TaskManager {
     public Optional<Subtask> getSubtask(int id) {
         Subtask subtask = subtaskRegistry.get(id);
         if (subtask != null) {
-            historyManager.addTask(new Subtask(subtask));
+            // 2025-03-12 maxproof fix
+            // Вследствие того, что в истории будет храниться только одна последняя
+            // версия задачи, нет смысла делать копию её состояния
+            // historyManager.add(new Subtask(subtask));
+            historyManager.add(subtask);
         }
         return Optional.ofNullable(subtask);
     }
@@ -155,7 +175,11 @@ public class InMemoryTaskManager implements TaskManager {
     public Optional<Epic> getEpic(int id) {
         Epic epic = epicRegistry.get(id);
         if (epic != null) {
-            historyManager.addTask(new Epic(epic));
+            // 2025-03-12 maxproof fix
+            // Вследствие того, что в истории будет храниться только одна последняя
+            // версия задачи, нет смысла делать копию её состояния
+            // historyManager.add(new Epic(epic));
+            historyManager.add(epic);
         }
         return Optional.ofNullable(epic);
     }
@@ -164,12 +188,14 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeTask(int id) {
         taskRegistry.remove(id);
+        historyManager.remove(id);
     }
 
 
     @Override
     public void removeSubtask(int id) {
         subtaskRegistry.remove(id);
+        historyManager.remove(id);
         epicRegistry.values().forEach(epic -> {
             if (epic.unregisterSubtask(id))
                 epic.setStatus(estimateEpicStatus(epic));
@@ -178,7 +204,18 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeEpic(int id) {
-        epicRegistry.remove(id);
+        Epic epic = epicRegistry.get(id);
+        if (epic != null) {
+            // 2025-03-12 maxproof new
+            // Согласно разъяснению ТЗ, при удалении эпика,
+            // удаляются все связанные с ним подзадачи
+            epic.getSubtasks().forEach(subtask -> {
+                subtaskRegistry.remove(subtask);
+                historyManager.remove(subtask);
+            });
+            epicRegistry.remove(id);
+            historyManager.remove(id);
+        }
     }
 
     @Override

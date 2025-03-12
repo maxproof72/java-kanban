@@ -379,24 +379,13 @@ class InMemoryTaskManagerTest {
 
         // Проверка переполнения
         manager.getEpic(epicId).orElseThrow();
-        manager.getEpic(epicId).orElseThrow();
-        manager.getEpic(epicId).orElseThrow();
-        manager.getEpic(epicId).orElseThrow();
-        manager.getEpic(epicId).orElseThrow();
-        manager.getEpic(epicId).orElseThrow();
-        manager.getEpic(epicId).orElseThrow();
         history = manager.getHistory();
-        assertEquals(10, history.size());
-        assertEquals(List.of(
-                epic, subtask1, subtask2,
-                epic, epic, epic, epic, epic, epic, epic), history);
+        assertEquals(4, history.size());
+        assertEquals(List.of( task, subtask1, subtask2, epic), history);
 
-        // Проверка сохраненного состояния
+        // Проверка актуального состояния
         manager.updateEpic(new Epic(epic, "EPIC2", "def"));
-        Epic updatedEpic = manager.getEpic(epicId).orElseThrow();
-        assertEquals("EPIC2", updatedEpic.getName());
         history = manager.getHistory();
         assertEquals("EPIC2", history.getLast().getName());
-        assertEquals("EPIC", history.get(history.size() - 2).getName());
     }
 }
