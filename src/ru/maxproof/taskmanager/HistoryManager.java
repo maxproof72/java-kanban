@@ -24,10 +24,4 @@ public interface HistoryManager {
      * @return Список просмотренных задач
      */
     List<Task> getHistory();
-
-//    /**
-//     * Возвращает число записей истории просмотра
-//     * @return Число записей истории просмотра
-//     */
-//    int size();
 }
