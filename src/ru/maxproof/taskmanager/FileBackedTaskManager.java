@@ -9,7 +9,9 @@ import java.util.StringJoiner;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
-    public static class ManagerSaveException extends RuntimeException {}
+    public static class ManagerSaveException extends RuntimeException {
+
+    }
 
     private final Path storageFile;
 
@@ -98,8 +100,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             }
             manager.taskId = globalId;
             return manager;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new ManagerSaveException();
         }
     }
