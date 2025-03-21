@@ -7,10 +7,10 @@ import java.util.*;
  */
 public class InMemoryTaskManager implements TaskManager {
 
-    private static int TaskId = 0;
-    private final Map<Integer, Task> taskRegistry = new HashMap<>();
-    private final Map<Integer, Epic> epicRegistry = new HashMap<>();
-    private final Map<Integer, Subtask> subtaskRegistry = new HashMap<>();
+    protected int taskId = 0;
+    protected final Map<Integer, Task> taskRegistry = new HashMap<>();
+    protected final Map<Integer, Epic> epicRegistry = new HashMap<>();
+    protected final Map<Integer, Subtask> subtaskRegistry = new HashMap<>();
     private final HistoryManager historyManager;
 
 
@@ -21,7 +21,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int createTask(Task draftTask) {
 
-        Task registeredTask = new Task(++TaskId, draftTask);
+        Task registeredTask = new Task(++taskId, draftTask);
         taskRegistry.put(registeredTask.getId(), registeredTask);
         return registeredTask.getId();
     }
@@ -34,7 +34,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic == null) {
             return TaskManager.DRAFT_TASK_ID;
         }
-        Subtask registeredSubtask = new Subtask(epicId, ++TaskId, draftSubtask);
+        Subtask registeredSubtask = new Subtask(epicId, ++taskId, draftSubtask);
         subtaskRegistry.put(registeredSubtask.getId(), registeredSubtask);
         epic.registerSubtask(registeredSubtask.getId());
         epic.setStatus(estimateEpicStatus(epic));
@@ -45,7 +45,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int createEpic(Epic draftEpic) {
 
-        Epic registeredEpic = new Epic(++TaskId, draftEpic);
+        Epic registeredEpic = new Epic(++taskId, draftEpic);
         epicRegistry.put(registeredEpic.getId(), registeredEpic);
         return registeredEpic.getId();
     }
@@ -227,5 +227,20 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<Task> getHistory() {
         return historyManager.getHistory();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InMemoryTaskManager that = (InMemoryTaskManager) o;
+        return Objects.equals(taskRegistry, that.taskRegistry) &&
+               Objects.equals(epicRegistry, that.epicRegistry) &&
+               Objects.equals(subtaskRegistry, that.subtaskRegistry);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(taskRegistry, epicRegistry, subtaskRegistry);
     }
 }
