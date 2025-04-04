@@ -42,6 +42,8 @@ class EpicTest {
     void clearSubtasks() {
         epic.clearSubtasks();
         assertTrue(epic.getSubtasks().isEmpty(), "Некорректная работа очистки подзадач");
+        assertTrue(manager.getEpics().stream()
+                .allMatch(e -> e.getSubtasks().isEmpty()));
     }
 
     @Test

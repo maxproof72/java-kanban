@@ -1,7 +1,6 @@
 package ru.maxproof.taskmanager;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -36,10 +35,12 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic == null) {
             return TaskManager.DRAFT_TASK_ID;
         }
-        Subtask registeredSubtask = new TaskBuilder(draftSubtask).setId(++taskId).buildSubtask(epicId);
+        Subtask registeredSubtask = new TaskBuilder(draftSubtask)
+                .setId(++taskId)
+                .buildSubtask(epicId);
         subtaskRegistry.put(registeredSubtask.getId(), registeredSubtask);
         epic.registerSubtask(registeredSubtask.getId());
-        updateEpicStatus(epic);
+        epicRegistry.put(epicId, updateEpicImplicitly(epic));
         return registeredSubtask.getId();
     }
 
@@ -68,22 +69,16 @@ public class InMemoryTaskManager implements TaskManager {
 
         if (subtask.getId() != TaskManager.DRAFT_TASK_ID && subtaskRegistry.containsKey(subtask.getId())) {
             subtaskRegistry.put(subtask.getId(), subtask);
-            historyManager.add(subtask);
-
-            // Обновление статуса родительского epic
-            Epic epic = epicRegistry.get(subtask.getEpicId());
-            updateEpicStatus(epic);
+            // Обновление соответствующего эпика (если, конечно, подзадача привязана к эпику)
+            epicRegistry.computeIfPresent(subtask.getEpicId(),
+                    (k, epic) -> updateEpicImplicitly(epic));
         }
     }
 
 
     @Override
     public void updateEpic(Epic epic) {
-
-        if (epic.getId() != TaskManager.DRAFT_TASK_ID && epicRegistry.containsKey(epic.getId())) {
-            epicRegistry.put(epic.getId(), epic);
-            historyManager.add(epic);
-        }
+        epicRegistry.computeIfPresent(epic.getId(), (k, oldEpic) -> epic);
     }
 
 
@@ -92,15 +87,18 @@ public class InMemoryTaskManager implements TaskManager {
         return List.copyOf(taskRegistry.values());
     }
 
+
     @Override
     public List<Subtask> getSubtasks() {
         return List.copyOf(subtaskRegistry.values());
     }
 
+
     @Override
     public List<Epic> getEpics() {
         return List.copyOf(epicRegistry.values());
     }
+
 
     @Override
     public List<Task> getTopTaskList() {
@@ -127,7 +125,11 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void clearSubtasks() {
-        epicRegistry.values().forEach(Epic::clearSubtasks);
+
+        epicRegistry.keySet().forEach(
+                k -> epicRegistry.computeIfPresent(k,
+                        (k1, oldEpic) -> updateEpicImplicitly(oldEpic.clearSubtasks())
+        ));
         subtaskRegistry.clear();
     }
 
@@ -185,10 +187,11 @@ public class InMemoryTaskManager implements TaskManager {
         Subtask subtask = subtaskRegistry.get(id);
         subtaskRegistry.remove(id);
         historyManager.remove(id);
-        Epic epic = epicRegistry.get(subtask.getEpicId());
-        epic.unregisterSubtask (id);
-        updateEpicStatus(epic);
+        // Обновление соответствующего эпика (если, конечно, подзадача привязана к эпику)
+        epicRegistry.computeIfPresent(subtask.getEpicId(),
+                (k, epic) -> updateEpicImplicitly(epic.unregisterSubtask(id)));
     }
+
 
     @Override
     public void removeEpic(int id) {
@@ -204,40 +207,47 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
+
     @Override
     public List<Subtask> getEpicSubtasks(Epic epic) {
         return epic.getSubtasks().stream().map(subtaskRegistry::get).toList();
     }
 
+
     /**
      * Процедура обновления статуса Epic задания на основе текущих статусов дочерних заданий
      */
-    private void updateEpicStatus(Epic epic) {
+    private Epic updateEpicImplicitly(Epic epic) {
         var subtasks = getEpicSubtasks(epic);
 
         // Обновление статуса выполнения эпика
-        var status = subtasks.stream().allMatch(Task::isNew) ? TaskStatus.NEW :
+        var newStatus = subtasks.stream().allMatch(Task::isNew) ? TaskStatus.NEW :
                 subtasks.stream().allMatch(Task::isDone) ? TaskStatus.DONE :
                         TaskStatus.IN_PROGRESS;
-        epic.setStatus(status);
 
-        // Обновление времени начала и завершения эпика
-        Comparator<LocalDateTime> timeComparator = (t1, t2) -> t1.isBefore(t2)? -1: t2.isBefore(t1)? +1: 0;
-        epic.startTime = subtasks.stream()
-                .map(Task::getStartTime)
-                .filter(Objects::nonNull)
-                .min(timeComparator)
-                .orElse(null);
-        epic.duration = subtasks.stream()
-                .map(Task::getDuration)
-                .filter(Objects::nonNull)
-                .reduce(Duration.ZERO, Duration::plus);
-        epic.endTime = subtasks.stream()
-                .map(Task::getEndTime)
-                .filter(Objects::nonNull)
-                .max(timeComparator)
-                .orElse(null);
+        return new TaskBuilder(epic)
+                .setStatus(newStatus)
+                // Обновление времени начала и завершения эпика
+                .setStartTime(
+                    subtasks.stream()
+                        .map(Task::getStartTime)
+                        .filter(Objects::nonNull)
+                        .min(Comparator.naturalOrder())
+                        .orElse(null))
+                .setDuration(
+                    subtasks.stream()
+                        .map(Task::getDuration)
+                        .filter(Objects::nonNull)
+                        .reduce(Duration.ZERO, Duration::plus))
+                .setEndTime(
+                    subtasks.stream()
+                        .map(Task::getEndTime)
+                        .filter(Objects::nonNull)
+                        .max(Comparator.naturalOrder())
+                        .orElse(null))
+                .buildEpic();
     }
+
 
     @Override
     public boolean isEmpty() {
@@ -250,6 +260,7 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager.getHistory();
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -259,6 +270,7 @@ public class InMemoryTaskManager implements TaskManager {
                Objects.equals(epicRegistry, that.epicRegistry) &&
                Objects.equals(subtaskRegistry, that.subtaskRegistry);
     }
+
 
     @Override
     public int hashCode() {

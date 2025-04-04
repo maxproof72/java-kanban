@@ -3,7 +3,6 @@ package ru.maxproof.taskmanager;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class Epic extends Task {
@@ -13,13 +12,14 @@ public class Epic extends Task {
      */
     private final List<Integer> subtaskIds = new ArrayList<>();
 
-    LocalDateTime endTime;
+    private final LocalDateTime endTime;
 
 
     public Epic(TaskBuilder builder) {
         super(builder);
         if (builder.getSubs() != null)
             subtaskIds.addAll(builder.getSubs());
+        endTime = builder.getEndTime();
     }
 
     /**
@@ -31,8 +31,9 @@ public class Epic extends Task {
     }
 
 
-    boolean unregisterSubtask(int id) {
-        return subtaskIds.remove((Integer) id);
+    Epic unregisterSubtask(int id) {
+        subtaskIds.remove((Integer) id);
+        return this;
     }
 
 
@@ -48,8 +49,13 @@ public class Epic extends Task {
     /**
      * Очистка подзадач
      */
-    void clearSubtasks() {
+    Epic clearSubtasks() {
         subtaskIds.clear();
-        setStatus(TaskStatus.NEW);
+        return this;
+    }
+
+    @Override
+    public LocalDateTime getEndTime() {
+        return endTime;
     }
 }

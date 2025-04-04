@@ -13,6 +13,7 @@ public class TaskBuilder {
     private LocalDateTime startTime;
     private Duration duration;
     private int epicId;
+    private LocalDateTime endTime;
     private List<Integer> subs;
 
 
@@ -124,15 +125,26 @@ public class TaskBuilder {
         return epicId;
     }
 
-    public void setEpicId(int epicId) {
+    public TaskBuilder setEpicId(int epicId) {
         this.epicId = epicId;
+        return this;
     }
 
     public List<Integer> getSubs() {
         return subs;
     }
 
-    public void setSubs(List<Integer> subs) {
+    public TaskBuilder setSubs(List<Integer> subs) {
         this.subs = subs;
+        return this;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public TaskBuilder setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+        return this;
     }
 }

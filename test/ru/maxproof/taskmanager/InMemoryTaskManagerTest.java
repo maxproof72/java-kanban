@@ -397,6 +397,6 @@ class InMemoryTaskManagerTest {
                 .setDescription("def")
                 .buildEpic());
         history = manager.getHistory();
-        assertEquals("EPIC2", history.getLast().getName());
+        assertEquals("EPIC2", manager.getEpic(history.getLast().getId()).orElseThrow().getName());
     }
 }

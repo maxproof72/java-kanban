@@ -11,9 +11,9 @@ public class Task {
     private final int id;
     private final String name;
     private final String description;
-    private TaskStatus status;
-    protected LocalDateTime startTime;
-    protected Duration duration;
+    private final TaskStatus status;
+    protected final LocalDateTime startTime;
+    protected final Duration duration;
 
     // endregion
 
@@ -34,10 +34,6 @@ public class Task {
 
     // region Getters & setters
 
-    public String getDescription() {
-        return description;
-    }
-
     public int getId() {
         return id;
     }
@@ -46,12 +42,12 @@ public class Task {
         return name;
     }
 
-    public TaskStatus getStatus() {
-        return status;
+    public String getDescription() {
+        return description;
     }
 
-    public void setStatus(TaskStatus status) {
-        this.status = status;
+    public TaskStatus getStatus() {
+        return status;
     }
 
     public boolean isNew() {
@@ -60,6 +56,18 @@ public class Task {
 
     public boolean isDone() {
         return getStatus() == TaskStatus.DONE;
+    }
+
+    LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    Duration getDuration() {
+        return duration;
+    }
+
+    LocalDateTime getEndTime() {
+        return (startTime != null && duration != null)? startTime.plus(duration) : null;
     }
 
     // endregion
@@ -89,17 +97,5 @@ public class Task {
                 ", description='" + description + '\'' +
                 ", status=" + status +
                 '}';
-    }
-
-    LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    Duration getDuration() {
-        return duration;
-    }
-
-    LocalDateTime getEndTime() {
-        return (startTime != null && duration != null)? startTime.plus(duration) : null;
     }
 }
