@@ -16,9 +16,9 @@ class TaskTest {
 
     @Test
     void testEquals() {
-        Task draftTask1 = new Task("abc", "def");
-        Task draftTask2 = new Task("abc", "def");
-        Task draftTask3 = new Task("eee", "def");
+        Task draftTask1 = new TaskBuilder().setName("abc").setDescription("def").buildTask();
+        Task draftTask2 = new TaskBuilder().setName("abc").setDescription("def").buildTask();
+        Task draftTask3 = new TaskBuilder().setName("eee").setDescription("def").buildTask();
         final int id1 = manager.createTask(draftTask1);
         final int id2 = manager.createTask(draftTask2);
         final int id3 = manager.createTask(draftTask3);
@@ -43,9 +43,9 @@ class TaskTest {
     @Test
     void testHashCode() {
 
-        Task draftTask1 = new Task("abc", "def");
-        Task draftTask2 = new Task("abc", "def");
-        Task draftTask3 = new Task("eee", "def");
+        Task draftTask1 = new TaskBuilder().setName("abc").setDescription("def").buildTask();
+        Task draftTask2 = new TaskBuilder().setName("abc").setDescription("def").buildTask();
+        Task draftTask3 = new TaskBuilder().setName("eee").setDescription("def").buildTask();
         final int id1 = manager.createTask(draftTask1);
         final int id2 = manager.createTask(draftTask2);
         final int id3 = manager.createTask(draftTask3);

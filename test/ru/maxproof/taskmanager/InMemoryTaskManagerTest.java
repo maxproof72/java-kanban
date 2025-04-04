@@ -18,7 +18,7 @@ class InMemoryTaskManagerTest {
     @Test
     void createTask() {
 
-        Task draftTask = new Task("abc", "def");
+        Task draftTask = new TaskBuilder().setName("abc").setDescription("def").buildTask();
         final int taskId = manager.createTask(draftTask);
         assertTrue(taskId != TaskManager.DRAFT_TASK_ID, "Недопустимый ID задачи");
 
@@ -36,8 +36,8 @@ class InMemoryTaskManagerTest {
     @Test
     void createSubtask() {
 
-        Epic draftEpic = new Epic("abc", "def");
-        Subtask draftSubtask = new Subtask("sub", "bus");
+        Epic draftEpic = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
+        Subtask draftSubtask = new TaskBuilder().setName("sub").setDescription("bus").buildSubtask();
         final int epicId = manager.createEpic(draftEpic);
         final int subtaskId = manager.createSubtask(epicId, draftSubtask);
         assertTrue(subtaskId != TaskManager.DRAFT_TASK_ID, "Недопустимый ID задачи");
@@ -62,8 +62,8 @@ class InMemoryTaskManagerTest {
         assertEquals(subtaskId, epicSubtasks.getFirst(), "Подзадачи не совпадают");
 
         // Проверка, что нельзя добавить подзадачу к Task и Subtask
-        Subtask wrongSubtask = new Subtask("sub", "task");
-        final int taskId = manager.createTask(new Task("bad", "food"));
+        Subtask wrongSubtask = new TaskBuilder().setName("sub").setDescription("task").buildSubtask();
+        final int taskId = manager.createTask(new TaskBuilder().setName("bad").setDescription("food").buildTask());
         int wrongId = manager.createSubtask(taskId,wrongSubtask);
         assertEquals(wrongId, TaskManager.DRAFT_TASK_ID);
         wrongId = manager.createSubtask(epicSubtasks.getFirst(), wrongSubtask);
@@ -73,7 +73,7 @@ class InMemoryTaskManagerTest {
     @Test
     void createEpic() {
 
-        Epic draftEpic = new Epic("abc", "def");
+        Epic draftEpic = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
         final int epicId = manager.createEpic(draftEpic);
         assertTrue(epicId != TaskManager.DRAFT_TASK_ID, "Недопустимый ID эпика");
         Epic epic = manager.getEpic(epicId).orElse(null);
@@ -93,16 +93,16 @@ class InMemoryTaskManagerTest {
     @Test
     void updateTask() {
 
-        Task draftTask = new Task("abc", "def");
+        Task draftTask = new TaskBuilder().setName("abc").setDescription("def").buildTask();
         final int taskId = manager.createTask(draftTask);
         Task task = manager.getTask(taskId).orElseThrow();
 
-        Task taskWithChangedName = new Task(task, "changed", task.getDescription());
+        Task taskWithChangedName = new TaskBuilder(task).setName("changed").buildTask();
         manager.updateTask(taskWithChangedName);
         Task updatedTask = manager.getTask(taskId).orElseThrow();
         assertEquals(taskWithChangedName, updatedTask, "Измененные задачи не совпадают");
 
-        Task taskWithChangedStatus = new Task(updatedTask, TaskStatus.IN_PROGRESS);
+        Task taskWithChangedStatus = new TaskBuilder(updatedTask).setStatus(TaskStatus.IN_PROGRESS).buildTask();
         manager.updateTask(taskWithChangedStatus);
         updatedTask = manager.getTask(taskId).orElseThrow();
         assertEquals(taskWithChangedStatus, updatedTask, "Задачи с новым статусом не совпадают");
@@ -111,9 +111,9 @@ class InMemoryTaskManagerTest {
     @Test
     void updateSubtask() {
 
-        Epic draftEpic = new Epic("abc", "def");
-        Subtask draftSubtask1 = new Subtask("sub1", "");
-        Subtask draftSubtask2 = new Subtask("sub2", "");
+        Epic draftEpic = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
+        Subtask draftSubtask1 = new TaskBuilder().setName("sub1").buildSubtask();
+        Subtask draftSubtask2 = new TaskBuilder().setName("sub2").buildSubtask();
         final int epicId = manager.createEpic(draftEpic);
         final int subtaskId1 = manager.createSubtask(epicId, draftSubtask1);
         final int subtaskId2 = manager.createSubtask(epicId, draftSubtask2);
@@ -125,27 +125,27 @@ class InMemoryTaskManagerTest {
         assertEquals(TaskStatus.NEW, epic.getStatus());
 
         // Изменение наименования подзадачи
-        Subtask subtaskWithChangedName = new Subtask(subtask1, "changed", subtask1.getDescription());
+        Subtask subtaskWithChangedName = new TaskBuilder(subtask1).setName("changed").buildSubtask();
         manager.updateSubtask(subtaskWithChangedName);
         subtask1 = manager.getSubtask(subtaskId1).orElseThrow();
         assertEquals(subtaskWithChangedName, subtask1, "Подзадачи не совпадают");
 
         // Изменение статуса подзадачи 1 (IN_PROGRESS & NEW -> Epic::IN_PROGRESS)
-        Subtask inProgressSubtask1 = new Subtask(subtask1, TaskStatus.IN_PROGRESS);
+        Subtask inProgressSubtask1 = new TaskBuilder(subtask1).setStatus(TaskStatus.IN_PROGRESS).buildSubtask();
         manager.updateSubtask(inProgressSubtask1);
         subtask1 = manager.getSubtask(subtaskId1).orElseThrow();
         assertEquals(inProgressSubtask1, subtask1);
         assertEquals(TaskStatus.IN_PROGRESS, manager.getEpic(epicId).orElseThrow().getStatus());
 
         // Изменение статуса подзадачи 2 (IN_PROGRESS & DONE -> Epic::IN_PROGRESS)
-        Subtask doneSubtask2 = new Subtask(subtask2, TaskStatus.DONE);
+        Subtask doneSubtask2 = new TaskBuilder(subtask2).setStatus(TaskStatus.DONE).buildSubtask();
         manager.updateSubtask(doneSubtask2);
         subtask2 = manager.getSubtask(subtaskId2).orElseThrow();
         assertEquals(subtask2, doneSubtask2);
         assertEquals(TaskStatus.IN_PROGRESS, manager.getEpic(epicId).orElseThrow().getStatus());
 
         // Изменение статуса подзадачи 1 (DONE & DONE -> Epic::DONE)
-        Subtask doneSubtask1 = new Subtask(subtask1, TaskStatus.DONE);
+        Subtask doneSubtask1 = new TaskBuilder(subtask1).setStatus(TaskStatus.DONE).buildSubtask();
         manager.updateSubtask(doneSubtask1);
         subtask1 = manager.getSubtask(subtaskId1).orElseThrow();
         assertEquals(subtask1, doneSubtask1);
@@ -155,11 +155,11 @@ class InMemoryTaskManagerTest {
     @Test
     void updateEpic() {
 
-        Epic draftEpic = new Epic("abc", "def");
+        Epic draftEpic = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
         final int epicId = manager.createEpic(draftEpic);
         Epic epic = manager.getEpic(epicId).orElseThrow();
 
-        Epic epicWithChangedName = new Epic(epic, "changed", epic.getDescription());
+        Epic epicWithChangedName = new TaskBuilder(epic).setName("changed").buildEpic();
         manager.updateEpic(epicWithChangedName);
         Epic updatedEpic = manager.getEpic(epicId).orElseThrow();
         assertEquals(epicWithChangedName, updatedEpic, "Измененные эпики не совпадают");
@@ -168,8 +168,8 @@ class InMemoryTaskManagerTest {
     @Test
     void getTasks() {
 
-        Task draftTask1 = new Task("task1", "desc1");
-        Task draftTask2 = new Task("task2", "desc2");
+        Task draftTask1 = new TaskBuilder().setName("task1").setDescription("desc1").buildTask();
+        Task draftTask2 = new TaskBuilder().setName("task2").setDescription("desc2").buildTask();
         manager.createTask(draftTask1);
         manager.createTask(draftTask2);
         List<Task> tasks = manager.getTasks();
@@ -182,9 +182,9 @@ class InMemoryTaskManagerTest {
     @Test
     void getSubtasks() {
 
-        int epicId = manager.createEpic(new Epic("abc", "def"));
-        Subtask draftSubtask1 = new Subtask("subtask1", "desc1");
-        Subtask draftSubtask2 = new Subtask("subtask2", "desc2");
+        int epicId = manager.createEpic(new TaskBuilder().setName("abc").setDescription("def").buildEpic());
+        Subtask draftSubtask1 = new TaskBuilder().setName("subtask1").setDescription("desc1").buildSubtask();
+        Subtask draftSubtask2 = new TaskBuilder().setName("subtask2").setDescription("desc2").buildSubtask();
         manager.createSubtask(epicId, draftSubtask1);
         manager.createSubtask(epicId, draftSubtask2);
         List<Subtask> subtasks = manager.getSubtasks();
@@ -197,8 +197,8 @@ class InMemoryTaskManagerTest {
     @Test
     void getEpics() {
 
-        Epic draftEpic1 = new Epic("epic1", "desc1");
-        Epic draftEpic2 = new Epic("epic2", "desc2");
+        Epic draftEpic1 = new TaskBuilder().setName("epic1").setDescription("desc1").buildEpic();
+        Epic draftEpic2 = new TaskBuilder().setName("epic2").setDescription("desc2").buildEpic();
         manager.createEpic(draftEpic1);
         manager.createEpic(draftEpic2);
         List<Epic> epics = manager.getEpics();
@@ -211,12 +211,12 @@ class InMemoryTaskManagerTest {
     @Test
     void getTopTaskList() {
 
-        Task draftTask1 = new Task("task1", "desc1");
-        Task draftTask2 = new Task("task2", "desc2");
+        Task draftTask1 = new TaskBuilder().setName("task1").setDescription("desc1").buildTask();
+        Task draftTask2 = new TaskBuilder().setName("task2").setDescription("desc2").buildTask();
         manager.createTask(draftTask1);
         manager.createTask(draftTask2);
-        Epic draftEpic1 = new Epic("epic1", "desc1");
-        Epic draftEpic2 = new Epic("epic2", "desc2");
+        Epic draftEpic1 = new TaskBuilder().setName("epic1").setDescription("desc1").buildEpic();
+        Epic draftEpic2 = new TaskBuilder().setName("epic2").setDescription("desc2").buildEpic();
         manager.createEpic(draftEpic1);
         manager.createEpic(draftEpic2);
 
@@ -233,16 +233,16 @@ class InMemoryTaskManagerTest {
     @Test
     void getEntireTaskList() {
 
-        Task draftTask1 = new Task("task1", "desc1");
-        Task draftTask2 = new Task("task2", "desc2");
+        Task draftTask1 = new TaskBuilder().setName("task1").setDescription("desc1").buildTask();
+        Task draftTask2 = new TaskBuilder().setName("task2").setDescription("desc2").buildTask();
         manager.createTask(draftTask1);
         manager.createTask(draftTask2);
-        Epic draftEpic1 = new Epic("epic1", "desc1");
-        Epic draftEpic2 = new Epic("epic2", "desc2");
+        Epic draftEpic1 = new TaskBuilder().setName("epic1").setDescription("desc1").buildEpic();
+        Epic draftEpic2 = new TaskBuilder().setName("epic2").setDescription("desc2").buildEpic();
         final int epicId1 = manager.createEpic(draftEpic1);
         final int epicId2 = manager.createEpic(draftEpic2);
-        Subtask draftSubtask1 = new Subtask("sub1", "");
-        Subtask draftSubtask2 = new Subtask("sub2", "");
+        Subtask draftSubtask1 = new TaskBuilder().setName("sub1").buildSubtask();
+        Subtask draftSubtask2 = new TaskBuilder().setName("sub2").buildSubtask();
         manager.createSubtask(epicId1, draftSubtask1);
         manager.createSubtask(epicId2, draftSubtask2);
 
@@ -261,8 +261,8 @@ class InMemoryTaskManagerTest {
     @Test
     void clearTasks() {
 
-        Task draftTask1 = new Task("task1", "desc1");
-        Task draftTask2 = new Task("task2", "desc2");
+        Task draftTask1 = new TaskBuilder().setName("task1").setDescription("desc1").buildTask();
+        Task draftTask2 = new TaskBuilder().setName("task2").setDescription("desc2").buildTask();
         manager.createTask(draftTask1);
         manager.createTask(draftTask2);
         assertEquals(2, manager.getTasks().size());
@@ -274,9 +274,9 @@ class InMemoryTaskManagerTest {
     @Test
     void clearSubtasks() {
 
-        int epicId = manager.createEpic(new Epic("abc", "def"));
-        Subtask draftSubtask1 = new Subtask("subtask1", "desc1");
-        Subtask draftSubtask2 = new Subtask("subtask2", "desc2");
+        int epicId = manager.createEpic(new TaskBuilder().setName("abc").setDescription("def").buildEpic());
+        Subtask draftSubtask1 = new TaskBuilder().setName("subtask1").setDescription("desc1").buildSubtask();
+        Subtask draftSubtask2 = new TaskBuilder().setName("subtask2").setDescription("desc2").buildSubtask();
         manager.createSubtask(epicId, draftSubtask1);
         manager.createSubtask(epicId, draftSubtask2);
         assertEquals(2, manager.getSubtasks().size());
@@ -291,8 +291,8 @@ class InMemoryTaskManagerTest {
     @Test
     void clearEpics() {
 
-        Epic draftEpic1 = new Epic("epic1", "desc1");
-        Epic draftEpic2 = new Epic("epic2", "desc2");
+        Epic draftEpic1 = new TaskBuilder().setName("epic1").setDescription("desc1").buildEpic();
+        Epic draftEpic2 = new TaskBuilder().setName("epic2").setDescription("desc2").buildEpic();
         manager.createEpic(draftEpic1);
         manager.createEpic(draftEpic2);
         assertEquals(2, manager.getEpics().size());
@@ -304,8 +304,8 @@ class InMemoryTaskManagerTest {
     @Test
     void removeTask() {
 
-        Task draftTask1 = new Task("task1", "desc1");
-        Task draftTask2 = new Task("task2", "desc2");
+        Task draftTask1 = new TaskBuilder().setName("task1").setDescription("desc1").buildTask();
+        Task draftTask2 = new TaskBuilder().setName("task2").setDescription("desc2").buildTask();
         final int taskId1 = manager.createTask(draftTask1);
         final int taskId2 = manager.createTask(draftTask2);
         assertEquals(2, manager.getTasks().size());
@@ -320,15 +320,23 @@ class InMemoryTaskManagerTest {
     @Test
     void removeSubtask() {
 
-        int epicId = manager.createEpic(new Epic("abc", "def"));
-        final int subtaskId1 = manager.createSubtask(epicId, new Subtask("subtask1", "desc1"));
-        final int subtaskId2 = manager.createSubtask(epicId, new Subtask("subtask2", "desc2"));
+        int epicId = manager.createEpic(new TaskBuilder().setName("abc").setDescription("def").buildEpic());
+        final int subtaskId1 = manager.createSubtask(epicId, new TaskBuilder()
+                .setName("subtask1")
+                .setDescription("desc1")
+                .buildSubtask());
+        final int subtaskId2 = manager.createSubtask(epicId, new TaskBuilder()
+                .setName("subtask2")
+                .setDescription("desc2")
+                .buildSubtask());
         assertEquals(2, manager.getSubtasks().size());
         assertEquals(2, manager.getEpic(epicId).orElseThrow().getSubtasks().size());
 
-        // Изменяем status подзадач на DONE
-        manager.updateSubtask(new Subtask(manager.getSubtask(subtaskId1).orElseThrow(), TaskStatus.DONE));
-        manager.updateSubtask(new Subtask(manager.getSubtask(subtaskId2).orElseThrow(), TaskStatus.DONE));
+        // Изменяем status всех подзадач на DONE
+        manager.updateSubtask(new TaskBuilder(manager.getSubtask(subtaskId1).orElseThrow())
+                .setStatus(TaskStatus.DONE).buildSubtask());
+        manager.updateSubtask(new TaskBuilder(manager.getSubtask(subtaskId2).orElseThrow())
+                .setStatus(TaskStatus.DONE).buildSubtask());
         assertEquals(TaskStatus.DONE, manager.getEpic(epicId).orElseThrow().getStatus());
 
         // Удаляем подзадачу 1
@@ -347,8 +355,8 @@ class InMemoryTaskManagerTest {
     @Test
     void removeEpic() {
 
-        Epic draftEpic1 = new Epic("epic1", "desc1");
-        Epic draftEpic2 = new Epic("epic2", "desc2");
+        Epic draftEpic1 = new TaskBuilder().setName("epic1").setDescription("desc1").buildEpic();
+        Epic draftEpic2 = new TaskBuilder().setName("epic2").setDescription("desc2").buildEpic();
         final int epicId1 = manager.createEpic(draftEpic1);
         final int epicId2 = manager.createEpic(draftEpic2);
         assertEquals(2, manager.getEpics().size());
@@ -361,11 +369,11 @@ class InMemoryTaskManagerTest {
     @Test
     void getHistory() {
 
-        final int taskId = manager.createTask(new Task("abc", "def"));
+        final int taskId = manager.createTask(new TaskBuilder().setName("abc").setDescription("def").buildTask());
         Task task = manager.getTask(taskId).orElseThrow();
-        int epicId = manager.createEpic(new Epic("EPIC", "def"));
-        Subtask draftSubtask1 = new Subtask("subtask1", "desc1");
-        Subtask draftSubtask2 = new Subtask("subtask2", "desc2");
+        int epicId = manager.createEpic(new TaskBuilder().setName("EPIC").setDescription("def").buildEpic());
+        Subtask draftSubtask1 = new TaskBuilder().setName("subtask1").setDescription("desc1").buildSubtask();
+        Subtask draftSubtask2 = new TaskBuilder().setName("subtask2").setDescription("desc2").buildSubtask();
         final int subtaskId1 = manager.createSubtask(epicId, draftSubtask1);
         final int subtaskId2 = manager.createSubtask(epicId, draftSubtask2);
         Epic epic = manager.getEpic(epicId).orElseThrow();
@@ -384,7 +392,10 @@ class InMemoryTaskManagerTest {
         assertEquals(List.of( task, subtask1, subtask2, epic), history);
 
         // Проверка актуального состояния
-        manager.updateEpic(new Epic(epic, "EPIC2", "def"));
+        manager.updateEpic(new TaskBuilder(epic)
+                .setName("EPIC2")
+                .setDescription("def")
+                .buildEpic());
         history = manager.getHistory();
         assertEquals("EPIC2", history.getLast().getName());
     }

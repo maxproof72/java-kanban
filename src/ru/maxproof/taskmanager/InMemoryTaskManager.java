@@ -1,5 +1,7 @@
 package ru.maxproof.taskmanager;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -21,7 +23,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int createTask(Task draftTask) {
 
-        Task registeredTask = new Task(++taskId, draftTask);
+        Task registeredTask = new TaskBuilder(draftTask).setId(++taskId).buildTask();
         taskRegistry.put(registeredTask.getId(), registeredTask);
         return registeredTask.getId();
     }
@@ -34,10 +36,10 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic == null) {
             return TaskManager.DRAFT_TASK_ID;
         }
-        Subtask registeredSubtask = new Subtask(epicId, ++taskId, draftSubtask);
+        Subtask registeredSubtask = new TaskBuilder(draftSubtask).setId(++taskId).buildSubtask(epicId);
         subtaskRegistry.put(registeredSubtask.getId(), registeredSubtask);
         epic.registerSubtask(registeredSubtask.getId());
-        epic.setStatus(estimateEpicStatus(epic));
+        updateEpicStatus(epic);
         return registeredSubtask.getId();
     }
 
@@ -45,7 +47,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int createEpic(Epic draftEpic) {
 
-        Epic registeredEpic = new Epic(++taskId, draftEpic);
+        Epic registeredEpic = new TaskBuilder(draftEpic).setId(++taskId).buildEpic();
         epicRegistry.put(registeredEpic.getId(), registeredEpic);
         return registeredEpic.getId();
     }
@@ -70,7 +72,7 @@ public class InMemoryTaskManager implements TaskManager {
 
             // Обновление статуса родительского epic
             Epic epic = epicRegistry.get(subtask.getEpicId());
-            epic.setStatus(estimateEpicStatus(epic));
+            updateEpicStatus(epic);
         }
     }
 
@@ -180,12 +182,12 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeSubtask(int id) {
 
+        Subtask subtask = subtaskRegistry.get(id);
         subtaskRegistry.remove(id);
         historyManager.remove(id);
-        epicRegistry.values().forEach(epic -> {
-            if (epic.unregisterSubtask(id))
-                epic.setStatus(estimateEpicStatus(epic));
-        });
+        Epic epic = epicRegistry.get(subtask.getEpicId());
+        epic.unregisterSubtask (id);
+        updateEpicStatus(epic);
     }
 
     @Override
@@ -210,12 +212,31 @@ public class InMemoryTaskManager implements TaskManager {
     /**
      * Процедура обновления статуса Epic задания на основе текущих статусов дочерних заданий
      */
-    private TaskStatus estimateEpicStatus(Epic epic) {
-
+    private void updateEpicStatus(Epic epic) {
         var subtasks = getEpicSubtasks(epic);
-        return subtasks.stream().allMatch(Task::isNew) ? TaskStatus.NEW :
+
+        // Обновление статуса выполнения эпика
+        var status = subtasks.stream().allMatch(Task::isNew) ? TaskStatus.NEW :
                 subtasks.stream().allMatch(Task::isDone) ? TaskStatus.DONE :
                         TaskStatus.IN_PROGRESS;
+        epic.setStatus(status);
+
+        // Обновление времени начала и завершения эпика
+        Comparator<LocalDateTime> timeComparator = (t1, t2) -> t1.isBefore(t2)? -1: t2.isBefore(t1)? +1: 0;
+        epic.startTime = subtasks.stream()
+                .map(Task::getStartTime)
+                .filter(Objects::nonNull)
+                .min(timeComparator)
+                .orElse(null);
+        epic.duration = subtasks.stream()
+                .map(Task::getDuration)
+                .filter(Objects::nonNull)
+                .reduce(Duration.ZERO, Duration::plus);
+        epic.endTime = subtasks.stream()
+                .map(Task::getEndTime)
+                .filter(Objects::nonNull)
+                .max(timeComparator)
+                .orElse(null);
     }
 
     @Override

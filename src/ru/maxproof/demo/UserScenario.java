@@ -29,13 +29,13 @@ public class UserScenario {
     public void run() {
 
         // 1. Создайте две задачи, эпик с тремя подзадачами и эпик без подзадач
-        int id1 = manager.createTask(new Task("task1", ""));
-        int id2 = manager.createTask(new Task("task2", ""));
-        int id3 = manager.createEpic(new Epic("epic1", ""));
-        int id31 = manager.createSubtask(id3, new Subtask("sub1", ""));
-        int id32 = manager.createSubtask(id3, new Subtask("sub2", ""));
-        int id33 = manager.createSubtask(id3, new Subtask("sub3", ""));
-        int id4 = manager.createEpic(new Epic("epic2", ""));
+        int id1 = manager.createTask(new TaskBuilder().setName("task1").buildTask());
+        int id2 = manager.createTask(new TaskBuilder().setName("task2").buildTask());
+        int id3 = manager.createEpic(new TaskBuilder().setName("epic1").buildEpic());
+        int id31 = manager.createSubtask(id3, new TaskBuilder().setName("sub1").buildSubtask());
+        int id32 = manager.createSubtask(id3, new TaskBuilder().setName("sub2").buildSubtask());
+        int id33 = manager.createSubtask(id3, new TaskBuilder().setName("sub3").buildSubtask());
+        int id4 = manager.createEpic(new TaskBuilder().setName("epic2").buildEpic());
 
         // 2. Запросите созданные задачи несколько раз в разном порядке
         // 3. После каждого запроса выведите историю и убедитесь, что в ней нет повторов
@@ -76,5 +76,4 @@ public class UserScenario {
         System.out.println("Удаление эпика привело к исключению всех элементов из истории");
         printHistory();
     }
-
 }

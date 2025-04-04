@@ -3,7 +3,8 @@ package ru.maxproof.taskmanager;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.List;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -32,6 +33,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             joiner.add(String.valueOf(((Subtask) task).getEpicId()));
         else
             joiner.add("");
+        LocalDateTime startTime = task.getStartTime();
+        joiner.add(startTime == null ? "" : startTime.toString());
+        Duration duration = task.getDuration();
+        joiner.add(duration == null ? "" : duration.toString());
         return joiner.toString();
     }
 
@@ -39,18 +44,21 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         Task task = null;
         // !! Здесь указание limit (=6) важно для того, чтобы не были выкинуты trailing empty strings !!
-        String[] parts = taskString.split(",", 6);
-        int id = Integer.parseInt(parts[0]);
-        String name = parts[2];
-        TaskStatus status = TaskStatus.valueOf(parts[3]);
-        String description = parts[4];
+        String[] parts = taskString.split(",", 8);
+        TaskBuilder builder = new TaskBuilder();
+        builder.setId(Integer.parseInt(parts[0]));
+        builder.setName(parts[2]);
+        builder.setStatus(TaskStatus.valueOf(parts[3]));
+        builder.setDescription(parts[4]);
+        builder.setStartTime(parts[6].isEmpty()? null: LocalDateTime.parse(parts[6]));
+        builder.setDuration(parts[7].isEmpty()? null: Duration.parse(parts[7]));
         String taskClass = parts[1];
         switch (taskClass) {
-            case "TASK" -> task = new Task(id, name, description, status);
-            case "EPIC" -> task = new Epic(id, name, description, status, List.of());
+            case "TASK" -> task = new Task(builder);
+            case "EPIC" -> task = new Epic(builder);
             case "SUBTASK" -> {
                 int epicId = Integer.parseInt(parts[5]);
-                task = new Subtask(epicId, id, name, description, status);
+                task = new Subtask(builder, epicId);
             }
         }
         return task;
@@ -187,13 +195,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         // 1. Заведите несколько разных задач, эпиков и подзадач.
         FileBackedTaskManager manager = new FileBackedTaskManager(tempStorage.toPath());
-        manager.createTask(new Task("task1", ""));
-        manager.createTask(new Task("task2", ""));
-        int id3 = manager.createEpic(new Epic("epic1", ""));
-        manager.createSubtask(id3, new Subtask("sub1", ""));
-        manager.createSubtask(id3, new Subtask("sub2", ""));
-        manager.createSubtask(id3, new Subtask("sub3", ""));
-        manager.createEpic(new Epic("epic2", ""));
+        manager.createTask(new TaskBuilder().setName("task1").buildTask());
+        manager.createTask(new TaskBuilder().setName("task2").buildTask());
+        int id3 = manager.createEpic(new TaskBuilder().setName("epic1").buildEpic());
+        manager.createSubtask(id3, new TaskBuilder().setName("sub1").buildSubtask());
+        manager.createSubtask(id3, new TaskBuilder().setName("sub2").buildSubtask());
+        manager.createSubtask(id3, new TaskBuilder().setName("sub3").buildSubtask());
+        manager.createEpic(new TaskBuilder().setName("epic2").buildEpic());
 
         // 2. Создайте новый FileBackedTaskManager-менеджер из этого же файла.
         FileBackedTaskManager manager2 = FileBackedTaskManager.loadTaskManager(tempStorage.toPath());

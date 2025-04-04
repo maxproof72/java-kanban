@@ -17,10 +17,19 @@ class SubtaskTest {
     @Test
     void testEquals() {
 
-        final int epicId = manager.createEpic(new Epic("epic", "description"));
-        Subtask draftTask1 = new Subtask("abc", "def");
-        Subtask draftTask2 = new Subtask("abc", "def");
-        Subtask draftTask3 = new Subtask("eee", "def");
+        final int epicId = manager.createEpic(new TaskBuilder().setName("epic").setDescription("description").buildEpic());
+        Subtask draftTask1 = new TaskBuilder()
+                .setName("abc")
+                .setDescription("def")
+                .buildSubtask();
+        Subtask draftTask2 = new TaskBuilder()
+                .setName("abc")
+                .setDescription("def")
+                .buildSubtask();
+        Subtask draftTask3 = new TaskBuilder()
+                .setName("sub3")
+                .setDescription("desc3")
+                .buildSubtask();
         final int id1 = manager.createSubtask(epicId, draftTask1);
         final int id2 = manager.createSubtask(epicId, draftTask2);
         final int id3 = manager.createSubtask(epicId, draftTask3);
@@ -45,10 +54,22 @@ class SubtaskTest {
     @Test
     void testHashCode() {
 
-        final int epicId = manager.createEpic(new Epic("epic", "description"));
-        Subtask draftTask1 = new Subtask("abc", "def");
-        Subtask draftTask2 = new Subtask("abc", "def");
-        Subtask draftTask3 = new Subtask("eee", "def");
+        final int epicId = manager.createEpic(new TaskBuilder()
+                .setName("epic")
+                .setDescription("description")
+                .buildEpic());
+        Subtask draftTask1 = new TaskBuilder()
+                .setName("abc")
+                .setDescription("def")
+                .buildSubtask();
+        Subtask draftTask2 = new TaskBuilder()
+                .setName("abc")
+                .setDescription("def")
+                .buildSubtask();
+        Subtask draftTask3 = new TaskBuilder()
+                .setName("sub3")
+                .setDescription("desc3")
+                .buildSubtask();
         final int id1 = manager.createSubtask(epicId, draftTask1);
         final int id2 = manager.createSubtask(epicId, draftTask2);
         final int id3 = manager.createSubtask(epicId, draftTask3);

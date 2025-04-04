@@ -16,9 +16,9 @@ class EpicTest {
     @BeforeEach
     void initTaskManager() {
         manager = new InMemoryTaskManager();
-        int epicId = manager.createEpic(new Epic("abc", "def"));
-        idSub1 = manager.createSubtask(epicId, new Subtask("sub1", "desc1"));
-        idSub2 = manager.createSubtask(epicId, new Subtask("sub2", "desc2"));
+        int epicId = manager.createEpic(new TaskBuilder().setName("abc").setDescription("def").buildEpic());
+        idSub1 = manager.createSubtask(epicId, new TaskBuilder().setName("sub1").setDescription("desc1").buildSubtask());
+        idSub2 = manager.createSubtask(epicId, new TaskBuilder().setName("sub2").setDescription("desc2").buildSubtask());
         epic = manager.getEpic(epicId).orElseThrow();
     }
 
@@ -46,9 +46,9 @@ class EpicTest {
 
     @Test
     void testEquals() {
-        Epic draftTask1 = new Epic("abc", "def");
-        Epic draftTask2 = new Epic("abc", "def");
-        Epic draftTask3 = new Epic("eee", "def");
+        Epic draftTask1 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
+        Epic draftTask2 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
+        Epic draftTask3 = new TaskBuilder().setName("eee").setDescription("def").buildEpic();
         final int id1 = manager.createEpic(draftTask1);
         final int id2 = manager.createEpic(draftTask2);
         final int id3 = manager.createEpic(draftTask3);
@@ -73,9 +73,9 @@ class EpicTest {
     @Test
     void testHashCode() {
 
-        Epic draftTask1 = new Epic("abc", "def");
-        Epic draftTask2 = new Epic("abc", "def");
-        Epic draftTask3 = new Epic("eee", "def");
+        Epic draftTask1 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
+        Epic draftTask2 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
+        Epic draftTask3 = new TaskBuilder().setName("eee").setDescription("def").buildEpic();
         final int id1 = manager.createEpic(draftTask1);
         final int id2 = manager.createEpic(draftTask2);
         final int id3 = manager.createEpic(draftTask3);

@@ -2,6 +2,10 @@ package ru.maxproof.demo;
 
 import ru.maxproof.taskmanager.*;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.Month;
+
 /**
  * Демонстрационный режим приложения
  */
@@ -88,54 +92,78 @@ public class Demo {
         System.out.println("Running Demo");
 
         System.out.println("Добавление простой задачи");
-        final int idGotoPracticum = taskManager.createTask(new Task(
-                "Сделать важное", "Записаться на курсы Yandex.Practicum"));      // задним числом
+        final int idGotoPracticum = taskManager.createTask(new TaskBuilder()
+                .setName("Сделать важное")
+                .setDescription("Записаться на курсы Yandex.Practicum")
+                .buildTask());
         printStructured();
 
         System.out.println("Изменение наименования задачи и обновление");
         Task taskGotoPracticum = taskManager.getTask(idGotoPracticum).orElseThrow();
-        taskGotoPracticum = new Task(taskGotoPracticum, "Важное дело", taskGotoPracticum.getDescription());
+        taskGotoPracticum = new TaskBuilder(taskGotoPracticum).setName("Важное дело").buildTask();
         taskManager.updateTask(taskGotoPracticum);
         printStructured();
 
         System.out.println("Обновление статуса задачи");
-        taskGotoPracticum = new Task(taskGotoPracticum, TaskStatus.DONE);
+        taskGotoPracticum = new TaskBuilder(taskGotoPracticum).setStatus(TaskStatus.DONE).buildTask();
         taskManager.updateTask(taskGotoPracticum);
         printStructured();
 
         System.out.println("Добавление еще одной простой задачи");
-        taskManager.createTask(new Task("Сложное дело", "Завершить курсы Yandex.Practicum"));
+        taskManager.createTask(new TaskBuilder()
+                .setName("Сложное дело")
+                .setDescription("Завершить курсы Yandex.Practicum")
+                .buildTask());
         printStructured();
 
         System.out.println("Добавление Epic задачи");
-        final int idJubilee = taskManager.createEpic(new Epic(
-                "Подготовиться к юбилею", "Подготовиться к празднованию юбилея"));
+        final LocalDateTime jubileeDate = LocalDateTime.of(2025, Month.JULY, 15, 0, 0);
+        final int idJubilee = taskManager.createEpic(new TaskBuilder()
+                .setName("Подготовиться к юбилею")
+                .setDescription("Подготовиться к празднованию юбилея")
+                .buildEpic());
         printStructured();
 
         System.out.println("Добавление подзадач");
         final int idRestaurant =
-            taskManager.createSubtask(idJubilee,
-                new Subtask("Ресторан", "Выбрать ресторан"));
-        taskManager.createSubtask(idJubilee, new Subtask(
-                "Гости", "Определиться с составом гостей"));
-        taskManager.createSubtask(idJubilee, new Subtask(
-                "Меню", "Определиться с меню"));
-        taskManager.createSubtask(idJubilee, new Subtask(
-                "Согласование", "Все согласовать с именинником"));
+            taskManager.createSubtask(idJubilee, new TaskBuilder()
+                    .setName("Ресторан")
+                    .setDescription("Выбрать ресторан")
+                    .setStartTime(jubileeDate.minusDays(30))
+                    .setDuration(Duration.ofDays(1))
+                    .buildSubtask());
+            taskManager.createSubtask(idJubilee, new TaskBuilder()
+                    .setName("Гости")
+                    .setDescription("Определиться с составом гостей")
+                    .setStartTime(jubileeDate.minusDays(40))
+                    .setDuration(Duration.ofDays(7))
+                    .buildSubtask());
+            taskManager.createSubtask(idJubilee, new TaskBuilder()
+                    .setName("Меню")
+                    .setDescription("Определиться с меню")
+                    .setStartTime(jubileeDate.minusDays(14))
+                    .setDuration(Duration.ofDays(3))
+                    .buildSubtask());
         final int idOrder =
-            taskManager.createSubtask(idJubilee, new Subtask(
-                "Заказ", "Заказать выбранный ресторан"));
+            taskManager.createSubtask(idJubilee, new TaskBuilder()
+                    .setName("Заказ")
+                    .setDescription("Заказать выбранный ресторан")
+                    .setStartTime(jubileeDate.minusDays(25))
+                    .buildSubtask());
         printStructured();
 
         System.out.println("Изменение наименования последней подзадачи и обновление");
         Subtask subOrder = taskManager.getSubtask(idOrder).orElseThrow();
-        subOrder = new Subtask(subOrder, "Бронирование", "Бронирование банкетного зала");
+        subOrder = new TaskBuilder(subOrder)
+                .setName("Бронирование")
+                .setDescription("Бронирование банкетного зала")
+                .buildSubtask();
         taskManager.updateSubtask(subOrder);
         printStructured();
 
         System.out.println("Изменение статуса первой подзадачи и обновление");
         Subtask subRestaurant = taskManager.getSubtask(idRestaurant).orElseThrow();
-        subRestaurant = new Subtask(subRestaurant, TaskStatus.DONE);
+        subRestaurant = new TaskBuilder(subRestaurant).setStatus(TaskStatus.DONE).buildSubtask();
         taskManager.updateSubtask(subRestaurant);
 
         printStructured();

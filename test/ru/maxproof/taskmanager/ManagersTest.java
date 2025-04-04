@@ -12,7 +12,10 @@ class ManagersTest {
         TaskManager manager = Managers.getDefault();
         assertNotNull(manager);
         assertNotEquals(TaskManager.DRAFT_TASK_ID,
-                manager.createTask(new Task("abc", "def")));
+                manager.createTask(new TaskBuilder()
+                        .setName("abc")
+                        .setDescription("def")
+                        .buildTask()));
         assertEquals(1, manager.getTasks().size());
     }
 

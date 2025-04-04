@@ -28,9 +28,9 @@ public class FileBackedTaskManagerTest {
         Assertions.assertTrue(manager1.isEmpty());
 
         // Создание нескольких задач
-        int epicId = manager.createEpic(new Epic("epic1", ""));
-        manager.createSubtask(epicId, new Subtask("sub1", ""));
-        manager.createTask(new Task("task1", ""));
+        int epicId = manager.createEpic(new TaskBuilder().setName("epic1").buildEpic());
+        manager.createSubtask(epicId, new TaskBuilder().setName("sub1").buildSubtask());
+        manager.createTask(new TaskBuilder().setName("task1").buildTask());
 
         // Проверка файла с несколькими задачами
         csv = Files.readAllLines(storageFile);
