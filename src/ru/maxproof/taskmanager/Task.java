@@ -12,8 +12,8 @@ public class Task {
     private final String name;
     private final String description;
     private final TaskStatus status;
-    protected final LocalDateTime startTime;
-    protected final Duration duration;
+    private final LocalDateTime startTime;
+    private final Duration duration;
 
     // endregion
 

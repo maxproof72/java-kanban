@@ -20,21 +20,6 @@ public class Epic extends Task {
         endTime = builder.getEndTime();
     }
 
-//    /**
-//     * Регистрация подзадачи (запускается менеджером)
-//     * @param id Id подзадачи
-//     */
-//    void registerSubtask(int id) {
-//        subtaskIds.add(id);
-//    }
-//
-//
-//    Epic unregisterSubtask(int id) {
-//        subtaskIds.remove((Integer) id);
-//        return this;
-//    }
-
-
     /**
      * Получение копии перечня дочерних задач
      * @return Список-копия перечня дочерних задач
@@ -43,14 +28,6 @@ public class Epic extends Task {
         return this.subtaskIds;
     }
 
-
-//    /**
-//     * Очистка подзадач
-//     */
-//    Epic clearSubtasks() {
-//        subtaskIds.clear();
-//        return this;
-//    }
 
     @Override
     public LocalDateTime getEndTime() {
