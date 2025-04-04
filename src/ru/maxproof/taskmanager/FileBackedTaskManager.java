@@ -43,7 +43,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     private Task loadTaskFromString(String taskString) {
 
         Task task = null;
-        // !! Здесь указание limit (=6) важно для того, чтобы не были выкинуты trailing empty strings !!
+        // !! Здесь указание limit (=8) важно для того, чтобы не были выкинуты trailing empty strings !!
         String[] parts = taskString.split(",", 8);
         TaskBuilder builder = new TaskBuilder();
         builder.setId(Integer.parseInt(parts[0]));
@@ -97,15 +97,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 }
                 Task loadedTask = manager.loadTaskFromString(line);
                 switch (loadedTask) {
-                    case Subtask subtask -> {
-                        manager.subtaskRegistry.put(subtask.getId(), subtask);
-                        manager.epicRegistry.get(subtask.getEpicId()).registerSubtask(subtask.getId());
-                    }
+                    case Subtask subtask -> manager.subtaskRegistry.put(subtask.getId(), subtask);
                     case Epic epic -> manager.epicRegistry.put(epic.getId(), epic);
                     case Task task -> manager.taskRegistry.put(task.getId(), task);
                 }
                 globalId = Math.max(globalId, loadedTask.getId());
             }
+            // Регистрация subtask в эпиках
+            manager.epicRegistry.keySet()
+                    .forEach(epicId -> manager.epicRegistry.computeIfPresent(epicId,
+                            (k, oldEpic) -> manager.updateEpicImplicitly(oldEpic,
+                                    list -> list.addAll(manager.subtaskRegistry.values().stream()
+                                            .filter(subtask -> subtask.getEpicId() == oldEpic.getId())
+                                            .map(Subtask::getId)
+                                            .toList()))));
             manager.taskId = globalId;
             return manager;
         } catch (IOException e) {

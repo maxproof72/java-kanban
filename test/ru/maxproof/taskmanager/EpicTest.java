@@ -23,27 +23,10 @@ class EpicTest {
     }
 
     @Test
-    void registerAndUnregisterSubtask() {
-        assertEquals(epic.getSubtasks().size(), 2, "Неправильное число подзадач");
-        assertTrue(epic.getSubtasks().contains(idSub1), "Не найдено привязанной подзадачи 1");
-        assertTrue(epic.getSubtasks().contains(idSub2), "Не найдено привязанной подзадачи 2");
-        epic.unregisterSubtask(idSub1);
-        assertFalse(epic.getSubtasks().contains(idSub1), "Не работает отвязка подзадачи от эпика");
-    }
-
-    @Test
     void getSubtasks() {
         assertEquals(epic.getSubtasks().size(), 2, "Неправильное число подзадач");
         assertTrue(epic.getSubtasks().contains(idSub1), "Не найдено привязанной подзадачи 1");
         assertTrue(epic.getSubtasks().contains(idSub2), "Не найдено привязанной подзадачи 2");
-    }
-
-    @Test
-    void clearSubtasks() {
-        epic.clearSubtasks();
-        assertTrue(epic.getSubtasks().isEmpty(), "Некорректная работа очистки подзадач");
-        assertTrue(manager.getEpics().stream()
-                .allMatch(e -> e.getSubtasks().isEmpty()));
     }
 
     @Test

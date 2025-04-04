@@ -2,7 +2,7 @@ package ru.maxproof.taskmanager;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.ArrayList;
 
 public class TaskBuilder {
 
@@ -14,7 +14,7 @@ public class TaskBuilder {
     private Duration duration;
     private int epicId;
     private LocalDateTime endTime;
-    private List<Integer> subs;
+    private ArrayList<Integer> subs;
 
 
     public TaskBuilder() {
@@ -37,7 +37,8 @@ public class TaskBuilder {
 
     public TaskBuilder(Epic epic) {
         this((Task)epic);
-        this.subs = epic.getSubtasks();
+        this.subs = new ArrayList<>();
+        this.subs.addAll(epic.getSubtasks());
     }
 
     void clear() {
@@ -81,22 +82,6 @@ public class TaskBuilder {
         return this;
     }
 
-    public Task buildTask() {
-        return new Task(this);
-    }
-
-    public Subtask buildSubtask() {
-        return new Subtask(this);
-    }
-
-    public Subtask buildSubtask(int epicId) {
-        return new Subtask(this, epicId);
-    }
-
-    public Epic buildEpic() {
-        return new Epic(this);
-    }
-
     public int getId() {
         return id;
     }
@@ -130,13 +115,8 @@ public class TaskBuilder {
         return this;
     }
 
-    public List<Integer> getSubs() {
+    public ArrayList<Integer> getSubs() {
         return subs;
-    }
-
-    public TaskBuilder setSubs(List<Integer> subs) {
-        this.subs = subs;
-        return this;
     }
 
     public LocalDateTime getEndTime() {
@@ -147,4 +127,21 @@ public class TaskBuilder {
         this.endTime = endTime;
         return this;
     }
+
+
+    // region Build task instances
+
+    public Task buildTask() {
+        return new Task(this);
+    }
+
+    public Subtask buildSubtask() {
+        return new Subtask(this);
+    }
+
+    public Epic buildEpic() {
+        return new Epic(this);
+    }
+
+    // endregion
 }

@@ -1,7 +1,10 @@
 package ru.maxproof.taskmanager;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Consumer;
+
 
 /**
  * Класс менеджера задач
@@ -37,10 +40,11 @@ public class InMemoryTaskManager implements TaskManager {
         }
         Subtask registeredSubtask = new TaskBuilder(draftSubtask)
                 .setId(++taskId)
-                .buildSubtask(epicId);
+                .setEpicId(epicId)
+                .buildSubtask();
         subtaskRegistry.put(registeredSubtask.getId(), registeredSubtask);
-        epic.registerSubtask(registeredSubtask.getId());
-        epicRegistry.put(epicId, updateEpicImplicitly(epic));
+        epicRegistry.put(epicId, updateEpicImplicitly(epic,
+                list -> list.add(registeredSubtask.getId())));
         return registeredSubtask.getId();
     }
 
@@ -71,7 +75,7 @@ public class InMemoryTaskManager implements TaskManager {
             subtaskRegistry.put(subtask.getId(), subtask);
             // Обновление соответствующего эпика (если, конечно, подзадача привязана к эпику)
             epicRegistry.computeIfPresent(subtask.getEpicId(),
-                    (k, epic) -> updateEpicImplicitly(epic));
+                    (k, epic) -> updateEpicImplicitly(epic, null));
         }
     }
 
@@ -128,7 +132,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         epicRegistry.keySet().forEach(
                 k -> epicRegistry.computeIfPresent(k,
-                        (k1, oldEpic) -> updateEpicImplicitly(oldEpic.clearSubtasks())
+                        (k1, oldEpic) -> updateEpicImplicitly(oldEpic, ArrayList::clear)
         ));
         subtaskRegistry.clear();
     }
@@ -189,7 +193,7 @@ public class InMemoryTaskManager implements TaskManager {
         historyManager.remove(id);
         // Обновление соответствующего эпика (если, конечно, подзадача привязана к эпику)
         epicRegistry.computeIfPresent(subtask.getEpicId(),
-                (k, epic) -> updateEpicImplicitly(epic.unregisterSubtask(id)));
+                (k, epic) -> updateEpicImplicitly(epic, list -> list.remove((Integer)id)));
     }
 
 
@@ -217,35 +221,48 @@ public class InMemoryTaskManager implements TaskManager {
     /**
      * Процедура обновления статуса Epic задания на основе текущих статусов дочерних заданий
      */
-    private Epic updateEpicImplicitly(Epic epic) {
-        var subtasks = getEpicSubtasks(epic);
+    protected Epic updateEpicImplicitly(Epic epic, Consumer<ArrayList<Integer>> subOperation) {
+
+        TaskBuilder builder = new TaskBuilder(epic);
+
+        // Обновление списка подзадач
+        if (subOperation != null) {
+            subOperation.accept(builder.getSubs());
+        }
 
         // Обновление статуса выполнения эпика
-        var newStatus = subtasks.stream().allMatch(Task::isNew) ? TaskStatus.NEW :
-                subtasks.stream().allMatch(Task::isDone) ? TaskStatus.DONE :
+        List<Subtask> subtasks = builder.getSubs().stream()
+                .map(subtaskRegistry::get)
+                .toList();
+        TaskStatus newStatus = subtasks.stream().allMatch(Task::isNew) ? TaskStatus.NEW :
+                    subtasks.stream().allMatch(Task::isDone) ? TaskStatus.DONE :
                         TaskStatus.IN_PROGRESS;
+        builder.setStatus(newStatus);
 
-        return new TaskBuilder(epic)
-                .setStatus(newStatus)
-                // Обновление времени начала и завершения эпика
-                .setStartTime(
-                    subtasks.stream()
-                        .map(Task::getStartTime)
-                        .filter(Objects::nonNull)
-                        .min(Comparator.naturalOrder())
-                        .orElse(null))
-                .setDuration(
-                    subtasks.stream()
-                        .map(Task::getDuration)
-                        .filter(Objects::nonNull)
-                        .reduce(Duration.ZERO, Duration::plus))
-                .setEndTime(
-                    subtasks.stream()
-                        .map(Task::getEndTime)
-                        .filter(Objects::nonNull)
-                        .max(Comparator.naturalOrder())
-                        .orElse(null))
-                .buildEpic();
+        // Обновление времени начала
+        LocalDateTime epicStartTime = subtasks.stream()
+                .map(Task::getStartTime)
+                .filter(Objects::nonNull)
+                .min(Comparator.naturalOrder())
+                .orElse(null);
+        builder.setStartTime(epicStartTime);
+
+        // Обновление длительности эпика
+        Duration epicDuration = subtasks.stream()
+                .map(Task::getDuration)
+                .filter(Objects::nonNull)
+                .reduce(Duration.ZERO, Duration::plus);
+        builder.setDuration(epicDuration);
+
+        // Обновление времени окончания
+        LocalDateTime epicEndTime = subtasks.stream()
+                .map(Task::getEndTime)
+                .filter(Objects::nonNull)
+                .max(Comparator.naturalOrder())
+                .orElse(null);
+        builder.setEndTime(epicEndTime);
+
+        return builder.buildEpic();
     }
 
 
