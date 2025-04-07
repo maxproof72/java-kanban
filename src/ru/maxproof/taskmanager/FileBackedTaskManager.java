@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.StringJoiner;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -191,30 +190,5 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public void removeEpic(int id) {
         super.removeEpic(id);
         save();
-    }
-
-
-    public static void main(String[] args) throws IOException {
-
-        File tempStorage = File.createTempFile("practicum", ".csv");
-
-        // 1. Заведите несколько разных задач, эпиков и подзадач.
-        FileBackedTaskManager manager = new FileBackedTaskManager(tempStorage.toPath());
-        manager.createTask(new TaskBuilder().setName("task1").buildTask());
-        manager.createTask(new TaskBuilder().setName("task2").buildTask());
-        int id3 = manager.createEpic(new TaskBuilder().setName("epic1").buildEpic());
-        manager.createSubtask(id3, new TaskBuilder().setName("sub1").buildSubtask());
-        manager.createSubtask(id3, new TaskBuilder().setName("sub2").buildSubtask());
-        manager.createSubtask(id3, new TaskBuilder().setName("sub3").buildSubtask());
-        manager.createEpic(new TaskBuilder().setName("epic2").buildEpic());
-
-        // 2. Создайте новый FileBackedTaskManager-менеджер из этого же файла.
-        FileBackedTaskManager manager2 = FileBackedTaskManager.loadTaskManager(tempStorage.toPath());
-
-        // 3. Проверьте, что все задачи, эпики, подзадачи, которые были в старом менеджере, есть в новом
-        if (Objects.equals(manager, manager2))
-            System.out.println("Менеджеры идентичны !! :)");
-        else
-            System.out.println("Менеджеры не равны !! :(");
     }
 }

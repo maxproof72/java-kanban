@@ -1,13 +1,21 @@
 package ru.maxproof.taskmanager;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-public class FileBackedTaskManagerTest {
+public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
+
+    @BeforeEach
+    void setUp() throws IOException {
+        manager = new FileBackedTaskManager(Files.createTempFile("practicum", ".csv"));
+    }
+
 
     @Test
     public void saveTest() throws Exception {
@@ -45,5 +53,12 @@ public class FileBackedTaskManagerTest {
         // Проверка чтения из файла с задачами
         FileBackedTaskManager manager2 = FileBackedTaskManager.loadTaskManager(storageFile);
         Assertions.assertEquals(manager, manager2);
+    }
+
+    @Test
+    public void throwTest() {
+
+        Assertions.assertThrows(FileBackedTaskManager.ManagerSaveException.class,
+                () -> FileBackedTaskManager.loadTaskManager(Path.of("Z:/")));
     }
 }

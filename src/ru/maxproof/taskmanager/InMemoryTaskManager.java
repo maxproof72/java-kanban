@@ -323,6 +323,7 @@ public class InMemoryTaskManager implements TaskManager {
         return Objects.hash(taskRegistry, epicRegistry, subtaskRegistry);
     }
 
+    @Override
     public List<Task> getPrioritizedTasks() {
         return List.copyOf(prioritizedTasks);
     }
