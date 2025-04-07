@@ -49,8 +49,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         builder.setName(parts[2]);
         builder.setStatus(TaskStatus.valueOf(parts[3]));
         builder.setDescription(parts[4]);
-        builder.setStartTime(parts[6].isEmpty()? null: LocalDateTime.parse(parts[6]));
-        builder.setDuration(parts[7].isEmpty()? null: Duration.parse(parts[7]));
+        builder.setStartTime(parts[6].isEmpty() ? null : LocalDateTime.parse(parts[6]));
+        builder.setDuration(parts[7].isEmpty() ? null : Duration.parse(parts[7]));
         String taskClass = parts[1];
         switch (taskClass) {
             case "TASK" -> task = new Task(builder);
