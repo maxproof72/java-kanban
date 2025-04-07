@@ -28,11 +28,11 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int createTask(Task draftTask) {
 
+        checkTaskInTime(draftTask);
         Task registeredTask = new TaskBuilder(draftTask).setId(++taskId).buildTask();
         taskRegistry.put(registeredTask.getId(), registeredTask);
-        if (registeredTask.getStartTime() != null) {
+        if (registeredTask.isValidTime())
             prioritizedTasks.add(registeredTask);
-        }
         return registeredTask.getId();
     }
 
@@ -40,6 +40,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int createSubtask(int epicId, Subtask draftSubtask) {
 
+        checkTaskInTime(draftSubtask);
         Epic epic = epicRegistry.get(epicId);
         if (epic == null) {
             return TaskManager.DRAFT_TASK_ID;
@@ -51,9 +52,8 @@ public class InMemoryTaskManager implements TaskManager {
         subtaskRegistry.put(registeredSubtask.getId(), registeredSubtask);
         epicRegistry.put(epicId, updateEpicImplicitly(epic,
                 list -> list.add(registeredSubtask.getId())));
-        if (registeredSubtask.getStartTime() != null) {
+        if (registeredSubtask.isValidTime())
             prioritizedTasks.add(registeredSubtask);
-        }
         return registeredSubtask.getId();
     }
 
@@ -70,11 +70,13 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void updateTask(Task task) {
 
+        checkTaskInTime(task);
         if (task.getId() != TaskManager.DRAFT_TASK_ID && taskRegistry.containsKey(task.getId())) {
             Task oldTask = taskRegistry.get(task.getId());
             taskRegistry.put(task.getId(), task);
-            prioritizedTasks.remove(oldTask);
-            if (task.getStartTime() != null) {
+            if (oldTask.isValidTime())
+                prioritizedTasks.remove(oldTask);
+            if (task.isValidTime()) {
                 prioritizedTasks.add(task);
             }
         }
@@ -84,14 +86,16 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void updateSubtask(Subtask subtask) {
 
+        checkTaskInTime(subtask);
         if (subtask.getId() != TaskManager.DRAFT_TASK_ID && subtaskRegistry.containsKey(subtask.getId())) {
             Subtask oldSubtask = subtaskRegistry.get(subtask.getId());
             subtaskRegistry.put(subtask.getId(), subtask);
             // Обновление соответствующего эпика (если, конечно, подзадача привязана к эпику)
             epicRegistry.computeIfPresent(subtask.getEpicId(),
                     (k, epic) -> updateEpicImplicitly(epic, null));
-            prioritizedTasks.remove(oldSubtask);
-            if (subtask.getStartTime() != null) {
+            if (oldSubtask.isValidTime())
+                prioritizedTasks.remove(oldSubtask);
+            if (subtask.isValidTime()) {
                 prioritizedTasks.add(subtask);
             }
         }
@@ -243,6 +247,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     /**
      * Процедура обновления статуса Epic задания на основе текущих статусов дочерних заданий
+     * @param epic Обновляемый эпик
+     * @param subOperation Операция с подзадачами
      */
     protected Epic updateEpicImplicitly(Epic epic, Consumer<ArrayList<Integer>> subOperation) {
 
@@ -264,23 +270,23 @@ public class InMemoryTaskManager implements TaskManager {
 
         // Обновление времени начала
         LocalDateTime epicStartTime = subtasks.stream()
+                .filter(Task::isValidTime)
                 .map(Task::getStartTime)
-                .filter(Objects::nonNull)
                 .min(Comparator.naturalOrder())
                 .orElse(null);
         builder.setStartTime(epicStartTime);
 
         // Обновление длительности эпика
         Duration epicDuration = subtasks.stream()
+                .filter(Task::isValidTime)
                 .map(Task::getDuration)
-                .filter(Objects::nonNull)
                 .reduce(Duration.ZERO, Duration::plus);
         builder.setDuration(epicDuration);
 
         // Обновление времени окончания
         LocalDateTime epicEndTime = subtasks.stream()
+                .filter(Task::isValidTime)
                 .map(Task::getEndTime)
-                .filter(Objects::nonNull)
                 .max(Comparator.naturalOrder())
                 .orElse(null);
         builder.setEndTime(epicEndTime);
@@ -317,7 +323,49 @@ public class InMemoryTaskManager implements TaskManager {
         return Objects.hash(taskRegistry, epicRegistry, subtaskRegistry);
     }
 
-    public TreeSet<Task> getPrioritizedTasks() {
-        return prioritizedTasks;
+    public List<Task> getPrioritizedTasks() {
+        return List.copyOf(prioritizedTasks);
+    }
+
+    /**
+     * Проверка, что две задачи не пересекаются во времени
+     * @param task1 Задача 1
+     * @param task2 Задача 2
+     * @return true, если задачи не пересекаются во времени
+     */
+    private boolean checkTasksDisjointInTime(Task task1, Task task2) {
+
+        // Проверка имеет смысл, если время задано
+        if (!task1.isValidTime() || !task2.isValidTime())
+            return true;
+
+        // Для проверки удобно, чтобы первой задачей была task1, для определенности
+        if (task2.getStartTime().isBefore(task1.getStartTime())) {
+            var t = task1;
+            task1 = task2;
+            task2 = t;
+        }
+
+        // Если начало задачи 2 настает раньше, чем оканчивается задача 1,
+        // либо задачи запускаются одновременно -
+        // задачи пересекаются во времени
+        return !task2.getStartTime().isBefore(task1.getEndTime()) &&
+                task2.getStartTime() != task1.getStartTime();
+    }
+
+
+    /**
+     * Проверка задачи пересечение с другими задачами на временной шкале
+     * @param task Проверяемая задача
+     * @throws RuntimeException Если задача пересекается с имеющейся задачей
+     */
+    private void checkTaskInTime(Task task) {
+
+        if (task.getStartTime() != null && task.getDuration() != null) {
+            if (prioritizedTasks.stream()
+                    .filter(task1 -> task1.getId() != task.getId())
+                    .anyMatch(task1 -> !checkTasksDisjointInTime(task1, task)))
+                throw new IllegalArgumentException("Недопустимо пересечение задач во времени");
+        }
     }
 }

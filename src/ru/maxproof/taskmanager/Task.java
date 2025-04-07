@@ -96,6 +96,17 @@ public class Task {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status +
+                ", startTime=" + startTime +
+                ", duration=" + duration +
                 '}';
+    }
+
+
+    /**
+     * Проверяет, задано ли корректное время задачи
+     * @return true, если задано начало выполнения и длительность задачи
+     */
+    public boolean isValidTime() {
+        return startTime != null && duration != null;
     }
 }
