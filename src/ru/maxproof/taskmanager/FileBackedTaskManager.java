@@ -41,22 +41,26 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private Task loadTaskFromString(String taskString) {
 
+        enum PosData {
+            ID, CLASS, NAME, STATUS, DESCRIPTION, EPIC_ID, START_TIME, DURATION
+        }
+
         Task task = null;
         // !! Здесь указание limit (=8) важно для того, чтобы не были выкинуты trailing empty strings !!
-        String[] parts = taskString.split(",", 8);
+        String[] parts = taskString.split(",", PosData.values().length);
         TaskBuilder builder = new TaskBuilder();
-        builder.setId(Integer.parseInt(parts[0]));
-        builder.setName(parts[2]);
-        builder.setStatus(TaskStatus.valueOf(parts[3]));
-        builder.setDescription(parts[4]);
-        builder.setStartTime(parts[6].isEmpty() ? null : LocalDateTime.parse(parts[6]));
-        builder.setDuration(parts[7].isEmpty() ? null : Duration.parse(parts[7]));
+        builder.setId(Integer.parseInt(parts[PosData.ID.ordinal()]));
+        builder.setName(parts[PosData.NAME.ordinal()]);
+        builder.setStatus(TaskStatus.valueOf(parts[PosData.STATUS.ordinal()]));
+        builder.setDescription(parts[PosData.DESCRIPTION.ordinal()]);
+        builder.setStartTime(parts[6].isEmpty() ? null : LocalDateTime.parse(parts[PosData.START_TIME.ordinal()]));
+        builder.setDuration(parts[7].isEmpty() ? null : Duration.parse(parts[PosData.DURATION.ordinal()]));
         String taskClass = parts[1];
         switch (taskClass) {
             case "TASK" -> task = new Task(builder);
             case "EPIC" -> task = new Epic(builder);
             case "SUBTASK" -> {
-                int epicId = Integer.parseInt(parts[5]);
+                int epicId = Integer.parseInt(parts[PosData.EPIC_ID.ordinal()]);
                 task = new Subtask(builder, epicId);
             }
         }

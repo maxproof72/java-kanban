@@ -362,7 +362,7 @@ public class InMemoryTaskManager implements TaskManager {
      */
     private void checkTaskInTime(Task task) {
 
-        if (task.getStartTime() != null && task.getDuration() != null) {
+        if (task.isValidTime()) {
             if (prioritizedTasks.stream()
                     .filter(task1 -> task1.getId() != task.getId())
                     .anyMatch(task1 -> !checkTasksDisjointInTime(task1, task)))
