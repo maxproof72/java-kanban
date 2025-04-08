@@ -11,9 +11,12 @@ class InMemoryHistoryManagerTest {
     @Test
     void addAndRemove() {
 
-        Task task1 = new Task(1, "task1", "desc1", TaskStatus.NEW);
-        Task task2 = new Task(2, "task2", "desc2", TaskStatus.NEW);
-        Task task3 = new Task(3, "task3", "desc3", TaskStatus.NEW);
+        Task task1 = new TaskBuilder()
+                .setId(1).setName("task1").setDescription("desc1").setStatus(TaskStatus.NEW).buildTask();
+        Task task2 = new TaskBuilder()
+                .setId(2).setName("task2").setDescription("desc2").setStatus(TaskStatus.NEW).buildTask();
+        Task task3 = new TaskBuilder()
+                .setId(3).setName("task3").setDescription("desc3").setStatus(TaskStatus.NEW).buildTask();
         List<Task> history;
 
         // Добавляем три задачи и проверяем размер и верхнюю запись

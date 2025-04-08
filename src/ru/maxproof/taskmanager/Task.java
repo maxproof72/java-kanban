@@ -1,5 +1,7 @@
 package ru.maxproof.taskmanager;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
@@ -9,80 +11,28 @@ public class Task {
     private final int id;
     private final String name;
     private final String description;
-    private TaskStatus status;
+    private final TaskStatus status;
+    private final LocalDateTime startTime;
+    private final Duration duration;
 
     // endregion
 
 
-    // region Constructors
-
     /**
-     * Общий конструктор инициализации полей
-     * @param id Идентификатор задачи
-     * @param name Наименование задачи
-     * @param description Описание задачи
-     * @param status Статус задачи
+     * Конструктор задачи при помощи настроенного строителя
+     * @param builder Строитель задачи
      */
-    Task(int id, String name, String description, TaskStatus status) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.status = status;
+    public Task(TaskBuilder builder) {
+        this.id = builder.getId();
+        this.name = builder.getName();
+        this.description = builder.getDescription();
+        this.status = builder.getStatus();
+        this.startTime = builder.getStartTime();
+        this.duration = builder.getDuration();
     }
-
-    /**
-     * Конструктор копирования
-     * @param task Исходный объект
-     */
-    Task(Task task) {
-        this(task.id, task.name, task.description, task.status);
-    }
-
-    /**
-     * Конструктор создания черновой задачи со статусом NEW
-     * @param name Наименование задачи
-     * @param description Краткое описание задачи
-     */
-    public Task(String name, String description) {
-        this(TaskManager.DRAFT_TASK_ID, name, description, TaskStatus.NEW);
-    }
-
-    /**
-     * Изменение наименования и/или описания задачи
-     * @param task Исходная задача
-     * @param name Новое имя
-     * @param description Новое описание
-     */
-    public Task(Task task, String name, String description) {
-        this(task.id, name, description, task.status);
-    }
-
-    /**
-     * Изменение статуса задачи
-     * @param task Исходная задача
-     * @param status Новый статус
-     */
-    public Task(Task task, TaskStatus status) {
-        this(task.id, task.name, task.description, status);
-    }
-
-    /**
-     * Конструктор создания задачи на основе черновой
-     * @param id Легальный идентификатор, полученный от менеджера задач
-     * @param draftTask Исходная черновая задача
-     */
-    Task(int id, Task draftTask) {
-        this(id, draftTask.name, draftTask.description, draftTask.status);
-    }
-
-    // endregion
 
 
     // region Getters & setters
-
-    public String getDescription() {
-        return description;
-    }
 
     public int getId() {
         return id;
@@ -92,12 +42,12 @@ public class Task {
         return name;
     }
 
-    public TaskStatus getStatus() {
-        return status;
+    public String getDescription() {
+        return description;
     }
 
-    public void setStatus(TaskStatus status) {
-        this.status = status;
+    public TaskStatus getStatus() {
+        return status;
     }
 
     public boolean isNew() {
@@ -106,6 +56,18 @@ public class Task {
 
     public boolean isDone() {
         return getStatus() == TaskStatus.DONE;
+    }
+
+    LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    Duration getDuration() {
+        return duration;
+    }
+
+    LocalDateTime getEndTime() {
+        return (startTime != null && duration != null) ? startTime.plus(duration) : null;
     }
 
     // endregion
@@ -134,6 +96,17 @@ public class Task {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status +
+                ", startTime=" + startTime +
+                ", duration=" + duration +
                 '}';
+    }
+
+
+    /**
+     * Проверяет, задано ли корректное время задачи
+     * @return true, если задано начало выполнения и длительность задачи
+     */
+    public boolean isValidTime() {
+        return startTime != null && duration != null;
     }
 }

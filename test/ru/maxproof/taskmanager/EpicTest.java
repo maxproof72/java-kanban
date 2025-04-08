@@ -16,19 +16,10 @@ class EpicTest {
     @BeforeEach
     void initTaskManager() {
         manager = new InMemoryTaskManager();
-        int epicId = manager.createEpic(new Epic("abc", "def"));
-        idSub1 = manager.createSubtask(epicId, new Subtask("sub1", "desc1"));
-        idSub2 = manager.createSubtask(epicId, new Subtask("sub2", "desc2"));
+        int epicId = manager.createEpic(new TaskBuilder().setName("abc").setDescription("def").buildEpic());
+        idSub1 = manager.createSubtask(epicId, new TaskBuilder().setName("sub1").setDescription("desc1").buildSubtask());
+        idSub2 = manager.createSubtask(epicId, new TaskBuilder().setName("sub2").setDescription("desc2").buildSubtask());
         epic = manager.getEpic(epicId).orElseThrow();
-    }
-
-    @Test
-    void registerAndUnregisterSubtask() {
-        assertEquals(epic.getSubtasks().size(), 2, "Неправильное число подзадач");
-        assertTrue(epic.getSubtasks().contains(idSub1), "Не найдено привязанной подзадачи 1");
-        assertTrue(epic.getSubtasks().contains(idSub2), "Не найдено привязанной подзадачи 2");
-        epic.unregisterSubtask(idSub1);
-        assertFalse(epic.getSubtasks().contains(idSub1), "Не работает отвязка подзадачи от эпика");
     }
 
     @Test
@@ -39,16 +30,10 @@ class EpicTest {
     }
 
     @Test
-    void clearSubtasks() {
-        epic.clearSubtasks();
-        assertTrue(epic.getSubtasks().isEmpty(), "Некорректная работа очистки подзадач");
-    }
-
-    @Test
     void testEquals() {
-        Epic draftTask1 = new Epic("abc", "def");
-        Epic draftTask2 = new Epic("abc", "def");
-        Epic draftTask3 = new Epic("eee", "def");
+        Epic draftTask1 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
+        Epic draftTask2 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
+        Epic draftTask3 = new TaskBuilder().setName("eee").setDescription("def").buildEpic();
         final int id1 = manager.createEpic(draftTask1);
         final int id2 = manager.createEpic(draftTask2);
         final int id3 = manager.createEpic(draftTask3);
@@ -73,9 +58,9 @@ class EpicTest {
     @Test
     void testHashCode() {
 
-        Epic draftTask1 = new Epic("abc", "def");
-        Epic draftTask2 = new Epic("abc", "def");
-        Epic draftTask3 = new Epic("eee", "def");
+        Epic draftTask1 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
+        Epic draftTask2 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
+        Epic draftTask3 = new TaskBuilder().setName("eee").setDescription("def").buildEpic();
         final int id1 = manager.createEpic(draftTask1);
         final int id2 = manager.createEpic(draftTask2);
         final int id3 = manager.createEpic(draftTask3);

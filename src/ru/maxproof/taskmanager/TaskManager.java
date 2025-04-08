@@ -154,4 +154,10 @@ public interface TaskManager {
      * @return Список задач
      */
     List<Task> getHistory();
+
+    /**
+     * Возвращает перечень задач, отсортированных по времени выполнения
+     * @return Перечень задач
+     */
+    List<Task> getPrioritizedTasks();
 }

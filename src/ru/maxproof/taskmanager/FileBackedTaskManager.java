@@ -3,8 +3,8 @@ package ru.maxproof.taskmanager;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.StringJoiner;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -32,25 +32,32 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             joiner.add(String.valueOf(((Subtask) task).getEpicId()));
         else
             joiner.add("");
+        LocalDateTime startTime = task.getStartTime();
+        joiner.add(startTime == null ? "" : startTime.toString());
+        Duration duration = task.getDuration();
+        joiner.add(duration == null ? "" : duration.toString());
         return joiner.toString();
     }
 
     private Task loadTaskFromString(String taskString) {
 
         Task task = null;
-        // !! Здесь указание limit (=6) важно для того, чтобы не были выкинуты trailing empty strings !!
-        String[] parts = taskString.split(",", 6);
-        int id = Integer.parseInt(parts[0]);
-        String name = parts[2];
-        TaskStatus status = TaskStatus.valueOf(parts[3]);
-        String description = parts[4];
+        // !! Здесь указание limit (=8) важно для того, чтобы не были выкинуты trailing empty strings !!
+        String[] parts = taskString.split(",", 8);
+        TaskBuilder builder = new TaskBuilder();
+        builder.setId(Integer.parseInt(parts[0]));
+        builder.setName(parts[2]);
+        builder.setStatus(TaskStatus.valueOf(parts[3]));
+        builder.setDescription(parts[4]);
+        builder.setStartTime(parts[6].isEmpty() ? null : LocalDateTime.parse(parts[6]));
+        builder.setDuration(parts[7].isEmpty() ? null : Duration.parse(parts[7]));
         String taskClass = parts[1];
         switch (taskClass) {
-            case "TASK" -> task = new Task(id, name, description, status);
-            case "EPIC" -> task = new Epic(id, name, description, status, List.of());
+            case "TASK" -> task = new Task(builder);
+            case "EPIC" -> task = new Epic(builder);
             case "SUBTASK" -> {
                 int epicId = Integer.parseInt(parts[5]);
-                task = new Subtask(epicId, id, name, description, status);
+                task = new Subtask(builder, epicId);
             }
         }
         return task;
@@ -89,15 +96,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 }
                 Task loadedTask = manager.loadTaskFromString(line);
                 switch (loadedTask) {
-                    case Subtask subtask -> {
-                        manager.subtaskRegistry.put(subtask.getId(), subtask);
-                        manager.epicRegistry.get(subtask.getEpicId()).registerSubtask(subtask.getId());
-                    }
+                    case Subtask subtask -> manager.subtaskRegistry.put(subtask.getId(), subtask);
                     case Epic epic -> manager.epicRegistry.put(epic.getId(), epic);
                     case Task task -> manager.taskRegistry.put(task.getId(), task);
                 }
                 globalId = Math.max(globalId, loadedTask.getId());
             }
+            // Регистрация subtask в эпиках
+            manager.epicRegistry.keySet()
+                    .forEach(epicId -> manager.epicRegistry.computeIfPresent(epicId,
+                            (k, oldEpic) -> manager.updateEpicImplicitly(oldEpic,
+                                    list -> list.addAll(manager.subtaskRegistry.values().stream()
+                                            .filter(subtask -> subtask.getEpicId() == oldEpic.getId())
+                                            .map(Subtask::getId)
+                                            .toList()))));
             manager.taskId = globalId;
             return manager;
         } catch (IOException e) {
@@ -178,30 +190,5 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public void removeEpic(int id) {
         super.removeEpic(id);
         save();
-    }
-
-
-    public static void main(String[] args) throws IOException {
-
-        File tempStorage = File.createTempFile("practicum", ".csv");
-
-        // 1. Заведите несколько разных задач, эпиков и подзадач.
-        FileBackedTaskManager manager = new FileBackedTaskManager(tempStorage.toPath());
-        manager.createTask(new Task("task1", ""));
-        manager.createTask(new Task("task2", ""));
-        int id3 = manager.createEpic(new Epic("epic1", ""));
-        manager.createSubtask(id3, new Subtask("sub1", ""));
-        manager.createSubtask(id3, new Subtask("sub2", ""));
-        manager.createSubtask(id3, new Subtask("sub3", ""));
-        manager.createEpic(new Epic("epic2", ""));
-
-        // 2. Создайте новый FileBackedTaskManager-менеджер из этого же файла.
-        FileBackedTaskManager manager2 = FileBackedTaskManager.loadTaskManager(tempStorage.toPath());
-
-        // 3. Проверьте, что все задачи, эпики, подзадачи, которые были в старом менеджере, есть в новом
-        if (Objects.equals(manager, manager2))
-            System.out.println("Менеджеры идентичны !! :)");
-        else
-            System.out.println("Менеджеры не равны !! :(");
     }
 }
