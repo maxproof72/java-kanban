@@ -38,19 +38,19 @@ public class InMemoryTaskManager implements TaskManager {
 
 
     @Override
-    public int createSubtask(int epicId, Subtask draftSubtask) {
+    public int createSubtask(Subtask draftSubtask) {
 
         checkTaskInTime(draftSubtask);
-        Epic epic = epicRegistry.get(epicId);
+        Epic epic = epicRegistry.get(draftSubtask.getEpicId());
         if (epic == null) {
             return TaskManager.DRAFT_TASK_ID;
         }
         Subtask registeredSubtask = new TaskBuilder(draftSubtask)
                 .setId(++taskId)
-                .setEpicId(epicId)
+                .setEpicId(epic.getId())
                 .buildSubtask();
         subtaskRegistry.put(registeredSubtask.getId(), registeredSubtask);
-        epicRegistry.put(epicId, updateEpicImplicitly(epic,
+        epicRegistry.put(epic.getId(), updateEpicImplicitly(epic,
                 list -> list.add(registeredSubtask.getId())));
         if (registeredSubtask.isValidTime())
             prioritizedTasks.add(registeredSubtask);

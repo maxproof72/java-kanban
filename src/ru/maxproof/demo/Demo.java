@@ -126,26 +126,30 @@ public class Demo {
 
         System.out.println("Добавление подзадач");
         final int idRestaurant =
-            taskManager.createSubtask(idJubilee, new TaskBuilder()
+            taskManager.createSubtask(new TaskBuilder()
+                    .setEpicId(idJubilee)
                     .setName("Ресторан")
                     .setDescription("Выбрать ресторан")
                     .setStartTime(jubileeDate.minusDays(30))
                     .setDuration(Duration.ofDays(1))
                     .buildSubtask());
-            taskManager.createSubtask(idJubilee, new TaskBuilder()
+            taskManager.createSubtask(new TaskBuilder()
+                    .setEpicId(idJubilee)
                     .setName("Гости")
                     .setDescription("Определиться с составом гостей")
                     .setStartTime(jubileeDate.minusDays(40))
                     .setDuration(Duration.ofDays(7))
                     .buildSubtask());
-            taskManager.createSubtask(idJubilee, new TaskBuilder()
+            taskManager.createSubtask(new TaskBuilder()
+                    .setEpicId(idJubilee)
                     .setName("Меню")
                     .setDescription("Определиться с меню")
                     .setStartTime(jubileeDate.minusDays(14))
                     .setDuration(Duration.ofDays(3))
                     .buildSubtask());
         final int idOrder =
-            taskManager.createSubtask(idJubilee, new TaskBuilder()
+            taskManager.createSubtask(new TaskBuilder()
+                    .setEpicId(idJubilee)
                     .setName("Заказ")
                     .setDescription("Заказать выбранный ресторан")
                     .setStartTime(jubileeDate.minusDays(25))

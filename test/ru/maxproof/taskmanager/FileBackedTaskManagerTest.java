@@ -37,7 +37,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
 
         // Создание нескольких задач
         int epicId = manager.createEpic(new TaskBuilder().setName("epic1").buildEpic());
-        manager.createSubtask(epicId, new TaskBuilder().setName("sub1").buildSubtask());
+        manager.createSubtask(new TaskBuilder().setEpicId(epicId).setName("sub1").buildSubtask());
         manager.createTask(new TaskBuilder().setName("task1").buildTask());
 
         // Проверка файла с несколькими задачами

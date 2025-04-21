@@ -84,14 +84,15 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 .setName("abc")
                 .setDescription("def")
                 .buildEpic();
+        final int epicId = manager.createEpic(draftEpic);
         Subtask draftSubtask = new TaskBuilder()
+                .setEpicId(epicId)
                 .setName("sub")
                 .setDescription("bus")
                 .setStartTime(now)
                 .setDuration(Duration.ofHours(1))
                 .buildSubtask();
-        final int epicId = manager.createEpic(draftEpic);
-        final int sub1 = manager.createSubtask(epicId, draftSubtask);
+        final int sub1 = manager.createSubtask(draftSubtask);
         assertTrue(sub1 != TaskManager.DRAFT_TASK_ID, "Недопустимый ID задачи");
         Subtask subtask = manager.getSubtask(sub1).orElse(null);
 
@@ -114,47 +115,52 @@ abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(sub1, epicSubtasks.getFirst(), "Подзадачи не совпадают");
 
         // Проверка, что нельзя добавить подзадачу к Task и Subtask
-        Subtask wrongSubtask = new TaskBuilder().setName("sub").setDescription("task").buildSubtask();
         final int taskId = manager.createTask(new TaskBuilder().setName("bad").setDescription("food").buildTask());
-        int wrongId = manager.createSubtask(taskId,wrongSubtask);
+        Subtask wrongSubtask = new TaskBuilder().setEpicId(taskId).setName("sub").setDescription("task").buildSubtask();
+        int wrongId = manager.createSubtask(wrongSubtask);
         assertEquals(wrongId, TaskManager.DRAFT_TASK_ID);
-        wrongId = manager.createSubtask(epicSubtasks.getFirst(), wrongSubtask);
+        wrongSubtask = new TaskBuilder(wrongSubtask).setEpicId(epicSubtasks.getFirst()).buildSubtask();
+        wrongId = manager.createSubtask(wrongSubtask);
         assertEquals(wrongId, TaskManager.DRAFT_TASK_ID);
 
         // Проверка задач с одинаковым временем старта (граничное условие)
         Subtask draftSubtask2 = new TaskBuilder()
+                .setEpicId(epicId)
                 .setName("T2")
                 .setStartTime(now)
                 .setDuration(Duration.ofHours(2))
                 .buildSubtask();
-        assertThrows(IllegalArgumentException.class, () -> manager.createSubtask(epicId, draftSubtask2));
+        assertThrows(IllegalArgumentException.class, () -> manager.createSubtask(draftSubtask2));
 
         // Проверка задач с пересекающимся временем выполнения
         Subtask draftSubtask3 = new TaskBuilder(draftSubtask2)
+                .setEpicId(epicId)
                 .setName("T3")
                 .setStartTime(LocalDateTime.now().plusMinutes(30))
                 .buildSubtask();
-        assertThrows(IllegalArgumentException.class, () -> manager.createSubtask(epicId, draftSubtask3));
+        assertThrows(IllegalArgumentException.class, () -> manager.createSubtask(draftSubtask3));
 
         // Проверка задач с примыкающим временем выполнения
         Subtask draftSubtask4 = new TaskBuilder(draftSubtask2)
+                .setEpicId(epicId)
                 .setName("T4")
                 .setStartTime(now.plusHours(1))
                 .buildSubtask();
-        int sub4 = manager.createSubtask(epicId, draftSubtask4);
+        int sub4 = manager.createSubtask(draftSubtask4);
         assertTrue(sub4 != TaskManager.DRAFT_TASK_ID, "Недопустимый ID");
 
         // Проверка задач с непересекающимся временем выполнения
         Subtask draftSubtask5 = new TaskBuilder(draftSubtask2)
+                .setEpicId(epicId)
                 .setName("T5")
                 .setStartTime(LocalDateTime.now().minusDays(2))
                 .buildSubtask();
-        int sub5 = manager.createSubtask(epicId, draftSubtask5);
+        int sub5 = manager.createSubtask(draftSubtask5);
         assertTrue(sub5 != TaskManager.DRAFT_TASK_ID, "Недопустимый ID");
 
         // Проверка задачи без указания времени выполнения
-        Subtask draftSubtask6 = new TaskBuilder().setName("T6").buildSubtask();
-        int sub6 = manager.createSubtask(epicId, draftSubtask6);
+        Subtask draftSubtask6 = new TaskBuilder().setEpicId(epicId).setName("T6").buildSubtask();
+        int sub6 = manager.createSubtask(draftSubtask6);
         assertTrue(sub6 != TaskManager.DRAFT_TASK_ID, "Недопустимый ID");
 
         // Проверка перечня задач на временной шкале
@@ -246,11 +252,11 @@ abstract class TaskManagerTest<T extends TaskManager> {
     void updateSubtask() {
 
         Epic draftEpic = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
-        Subtask draftSubtask1 = new TaskBuilder().setName("sub1").buildSubtask();
-        Subtask draftSubtask2 = new TaskBuilder().setName("sub2").buildSubtask();
         final int epicId = manager.createEpic(draftEpic);
-        final int subtaskId1 = manager.createSubtask(epicId, draftSubtask1);
-        final int subtaskId2 = manager.createSubtask(epicId, draftSubtask2);
+        Subtask draftSubtask1 = new TaskBuilder().setEpicId(epicId).setName("sub1").buildSubtask();
+        Subtask draftSubtask2 = new TaskBuilder().setEpicId(epicId).setName("sub2").buildSubtask();
+        final int subtaskId1 = manager.createSubtask(draftSubtask1);
+        final int subtaskId2 = manager.createSubtask(draftSubtask2);
         Subtask subtask1 = manager.getSubtask(subtaskId1).orElseThrow();
         Subtask subtask2 = manager.getSubtask(subtaskId2).orElseThrow();
         Epic epic = manager.getEpic(epicId).orElseThrow();
@@ -341,10 +347,10 @@ abstract class TaskManagerTest<T extends TaskManager> {
     void getSubtasks() {
 
         int epicId = manager.createEpic(new TaskBuilder().setName("abc").setDescription("def").buildEpic());
-        Subtask draftSubtask1 = new TaskBuilder().setName("subtask1").setDescription("desc1").buildSubtask();
-        Subtask draftSubtask2 = new TaskBuilder().setName("subtask2").setDescription("desc2").buildSubtask();
-        manager.createSubtask(epicId, draftSubtask1);
-        manager.createSubtask(epicId, draftSubtask2);
+        Subtask draftSubtask1 = new TaskBuilder().setEpicId(epicId).setName("subtask1").setDescription("desc1").buildSubtask();
+        Subtask draftSubtask2 = new TaskBuilder().setEpicId(epicId).setName("subtask2").setDescription("desc2").buildSubtask();
+        manager.createSubtask(draftSubtask1);
+        manager.createSubtask(draftSubtask2);
         List<Subtask> subtasks = manager.getSubtasks();
         assertNotNull(subtasks);
         assertEquals(2, subtasks.size());
@@ -399,10 +405,10 @@ abstract class TaskManagerTest<T extends TaskManager> {
         Epic draftEpic2 = new TaskBuilder().setName("epic2").setDescription("desc2").buildEpic();
         final int epicId1 = manager.createEpic(draftEpic1);
         final int epicId2 = manager.createEpic(draftEpic2);
-        Subtask draftSubtask1 = new TaskBuilder().setName("sub1").buildSubtask();
-        Subtask draftSubtask2 = new TaskBuilder().setName("sub2").buildSubtask();
-        manager.createSubtask(epicId1, draftSubtask1);
-        manager.createSubtask(epicId2, draftSubtask2);
+        Subtask draftSubtask1 = new TaskBuilder().setEpicId(epicId1).setName("sub1").buildSubtask();
+        Subtask draftSubtask2 = new TaskBuilder().setEpicId(epicId2).setName("sub2").buildSubtask();
+        manager.createSubtask(draftSubtask1);
+        manager.createSubtask(draftSubtask2);
 
         List<Task> entireList = manager.getEntireTaskList();
         assertNotNull(entireList);
@@ -433,10 +439,10 @@ abstract class TaskManagerTest<T extends TaskManager> {
     void clearSubtasks() {
 
         int epicId = manager.createEpic(new TaskBuilder().setName("abc").setDescription("def").buildEpic());
-        Subtask draftSubtask1 = new TaskBuilder().setName("subtask1").setDescription("desc1").buildSubtask();
-        Subtask draftSubtask2 = new TaskBuilder().setName("subtask2").setDescription("desc2").buildSubtask();
-        manager.createSubtask(epicId, draftSubtask1);
-        manager.createSubtask(epicId, draftSubtask2);
+        Subtask draftSubtask1 = new TaskBuilder().setEpicId(epicId).setName("subtask1").setDescription("desc1").buildSubtask();
+        Subtask draftSubtask2 = new TaskBuilder().setEpicId(epicId).setName("subtask2").setDescription("desc2").buildSubtask();
+        manager.createSubtask(draftSubtask1);
+        manager.createSubtask(draftSubtask2);
         assertEquals(2, manager.getSubtasks().size());
         manager.clearSubtasks();
         assertTrue(manager.getSubtasks().isEmpty());
@@ -479,11 +485,13 @@ abstract class TaskManagerTest<T extends TaskManager> {
     void removeSubtask() {
 
         int epicId = manager.createEpic(new TaskBuilder().setName("abc").setDescription("def").buildEpic());
-        final int subtaskId1 = manager.createSubtask(epicId, new TaskBuilder()
+        final int subtaskId1 = manager.createSubtask(new TaskBuilder()
+                .setEpicId(epicId)
                 .setName("subtask1")
                 .setDescription("desc1")
                 .buildSubtask());
-        final int subtaskId2 = manager.createSubtask(epicId, new TaskBuilder()
+        final int subtaskId2 = manager.createSubtask(new TaskBuilder()
+                .setEpicId(epicId)
                 .setName("subtask2")
                 .setDescription("desc2")
                 .buildSubtask());
@@ -530,10 +538,10 @@ abstract class TaskManagerTest<T extends TaskManager> {
         final int taskId = manager.createTask(new TaskBuilder().setName("abc").setDescription("def").buildTask());
         Task task = manager.getTask(taskId).orElseThrow();
         int epicId = manager.createEpic(new TaskBuilder().setName("EPIC").setDescription("def").buildEpic());
-        Subtask draftSubtask1 = new TaskBuilder().setName("subtask1").setDescription("desc1").buildSubtask();
-        Subtask draftSubtask2 = new TaskBuilder().setName("subtask2").setDescription("desc2").buildSubtask();
-        final int subtaskId1 = manager.createSubtask(epicId, draftSubtask1);
-        final int subtaskId2 = manager.createSubtask(epicId, draftSubtask2);
+        Subtask draftSubtask1 = new TaskBuilder().setEpicId(epicId).setName("subtask1").setDescription("desc1").buildSubtask();
+        Subtask draftSubtask2 = new TaskBuilder().setEpicId(epicId).setName("subtask2").setDescription("desc2").buildSubtask();
+        final int subtaskId1 = manager.createSubtask(draftSubtask1);
+        final int subtaskId2 = manager.createSubtask(draftSubtask2);
         Epic epic = manager.getEpic(epicId).orElseThrow();
         Subtask subtask1 = manager.getSubtask(subtaskId1).orElseThrow();
         Subtask subtask2 = manager.getSubtask(subtaskId2).orElseThrow();

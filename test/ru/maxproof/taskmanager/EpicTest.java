@@ -17,8 +17,8 @@ class EpicTest {
     void initTaskManager() {
         manager = new InMemoryTaskManager();
         int epicId = manager.createEpic(new TaskBuilder().setName("abc").setDescription("def").buildEpic());
-        idSub1 = manager.createSubtask(epicId, new TaskBuilder().setName("sub1").setDescription("desc1").buildSubtask());
-        idSub2 = manager.createSubtask(epicId, new TaskBuilder().setName("sub2").setDescription("desc2").buildSubtask());
+        idSub1 = manager.createSubtask(new TaskBuilder().setEpicId(epicId).setName("sub1").setDescription("desc1").buildSubtask());
+        idSub2 = manager.createSubtask(new TaskBuilder().setEpicId(epicId).setName("sub2").setDescription("desc2").buildSubtask());
         epic = manager.getEpic(epicId).orElseThrow();
     }
 

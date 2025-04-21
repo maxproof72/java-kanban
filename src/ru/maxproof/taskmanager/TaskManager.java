@@ -22,7 +22,7 @@ public interface TaskManager {
      * @param draftSubtask Черновая подзадача
      * @return Зарегистрированная подзадача с реальным идентификатором
      */
-    int createSubtask(int epicId, Subtask draftSubtask);
+    int createSubtask(Subtask draftSubtask);
 
     /**
      * Регистрирует черновую сложную задачу и возвращает ее идентификатор в реестре
