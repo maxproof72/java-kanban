@@ -24,7 +24,7 @@ class EpicTest {
 
     @Test
     void getSubtasks() {
-        assertEquals(epic.getSubtasks().size(), 2, "Неправильное число подзадач");
+        assertEquals(2, epic.getSubtasks().size(), "Неправильное число подзадач");
         assertTrue(epic.getSubtasks().contains(idSub1), "Не найдено привязанной подзадачи 1");
         assertTrue(epic.getSubtasks().contains(idSub2), "Не найдено привязанной подзадачи 2");
     }

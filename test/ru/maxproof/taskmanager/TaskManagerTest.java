@@ -118,10 +118,10 @@ abstract class TaskManagerTest<T extends TaskManager> {
         final int taskId = manager.createTask(new TaskBuilder().setName("bad").setDescription("food").buildTask());
         Subtask wrongSubtask = new TaskBuilder().setEpicId(taskId).setName("sub").setDescription("task").buildSubtask();
         int wrongId = manager.createSubtask(wrongSubtask);
-        assertEquals(wrongId, TaskManager.DRAFT_TASK_ID);
+        assertEquals(TaskManager.DRAFT_TASK_ID, wrongId);
         wrongSubtask = new TaskBuilder(wrongSubtask).setEpicId(epicSubtasks.getFirst()).buildSubtask();
         wrongId = manager.createSubtask(wrongSubtask);
-        assertEquals(wrongId, TaskManager.DRAFT_TASK_ID);
+        assertEquals(TaskManager.DRAFT_TASK_ID, wrongId);
 
         // Проверка задач с одинаковым временем старта (граничное условие)
         Subtask draftSubtask2 = new TaskBuilder()

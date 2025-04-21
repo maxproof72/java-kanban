@@ -27,7 +27,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
 
         // Проверка файла
         List<String> csv = Files.readAllLines(storageFile);
-        Assertions.assertEquals(csv.size(), 1);
+        Assertions.assertEquals(1, csv.size());
         Assertions.assertTrue(csv.getFirst().startsWith("id"));
         Assertions.assertEquals(6, csv.getFirst().split(",", 6).length);
 
@@ -42,7 +42,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
 
         // Проверка файла с несколькими задачами
         csv = Files.readAllLines(storageFile);
-        Assertions.assertEquals(csv.size(), 4);
+        Assertions.assertEquals(4, csv.size());
         Assertions.assertTrue(csv.get(1).startsWith("3,"));
         Assertions.assertTrue(csv.get(2).startsWith("1,"));
         Assertions.assertTrue(csv.get(3).startsWith("2,"));
