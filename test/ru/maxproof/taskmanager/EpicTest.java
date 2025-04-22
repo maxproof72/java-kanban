@@ -16,10 +16,15 @@ class EpicTest {
     @BeforeEach
     void initTaskManager() {
         manager = new InMemoryTaskManager();
-        int epicId = manager.createEpic(new TaskBuilder().setName("abc").setDescription("def").buildEpic());
-        idSub1 = manager.createSubtask(new TaskBuilder().setEpicId(epicId).setName("sub1").setDescription("desc1").buildSubtask());
-        idSub2 = manager.createSubtask(new TaskBuilder().setEpicId(epicId).setName("sub2").setDescription("desc2").buildSubtask());
-        epic = manager.getEpic(epicId).orElseThrow();
+        int epicId = manager.createEpic(
+                new TaskBuilder().setName("abc").setDescription("def").buildEpic()).getId();
+        idSub1 = manager.createSubtask(
+                new TaskBuilder().setEpicId(epicId).setName("sub1").setDescription("desc1")
+                        .buildSubtask()).getId();
+        idSub2 = manager.createSubtask(
+                new TaskBuilder().setEpicId(epicId).setName("sub2").setDescription("desc2")
+                        .buildSubtask()).getId();
+        epic = manager.getEpic(epicId);
     }
 
     @Test
@@ -34,12 +39,12 @@ class EpicTest {
         Epic draftTask1 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
         Epic draftTask2 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
         Epic draftTask3 = new TaskBuilder().setName("eee").setDescription("def").buildEpic();
-        final int id1 = manager.createEpic(draftTask1);
-        final int id2 = manager.createEpic(draftTask2);
-        final int id3 = manager.createEpic(draftTask3);
-        Epic savedTask1 = manager.getEpic(id1).orElseThrow();
-        Epic savedTask2 = manager.getEpic(id2).orElseThrow();
-        Epic savedTask3 = manager.getEpic(id3).orElseThrow();
+        final int id1 = manager.createEpic(draftTask1).getId();
+        final int id2 = manager.createEpic(draftTask2).getId();
+        final int id3 = manager.createEpic(draftTask3).getId();
+        Epic savedTask1 = manager.getEpic(id1);
+        Epic savedTask2 = manager.getEpic(id2);
+        Epic savedTask3 = manager.getEpic(id3);
 
         // Черновые задачи сравниваются без учета ID
         assertEquals(draftTask1, draftTask2);
@@ -61,12 +66,12 @@ class EpicTest {
         Epic draftTask1 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
         Epic draftTask2 = new TaskBuilder().setName("abc").setDescription("def").buildEpic();
         Epic draftTask3 = new TaskBuilder().setName("eee").setDescription("def").buildEpic();
-        final int id1 = manager.createEpic(draftTask1);
-        final int id2 = manager.createEpic(draftTask2);
-        final int id3 = manager.createEpic(draftTask3);
-        Epic savedTask1 = manager.getEpic(id1).orElseThrow();
-        Epic savedTask2 = manager.getEpic(id2).orElseThrow();
-        Epic savedTask3 = manager.getEpic(id3).orElseThrow();
+        final int id1 = manager.createEpic(draftTask1).getId();
+        final int id2 = manager.createEpic(draftTask2).getId();
+        final int id3 = manager.createEpic(draftTask3).getId();
+        Epic savedTask1 = manager.getEpic(id1);
+        Epic savedTask2 = manager.getEpic(id2);
+        Epic savedTask3 = manager.getEpic(id3);
 
         // Черновые задачи сравниваются без учета ID
         assertEquals(draftTask1.hashCode(), draftTask2.hashCode());

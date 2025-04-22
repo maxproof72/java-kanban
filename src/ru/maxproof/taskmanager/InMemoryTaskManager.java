@@ -26,25 +26,36 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public int createTask(Task draftTask) {
+    public Task createTask(Task draftTask) {
 
         checkTaskInTime(draftTask);
+        if (draftTask.getId() != TaskManager.DRAFT_TASK_ID)
+            throw new InvalidTaskIdException("Ненулевое значение Id новой задачи.");
+
         Task registeredTask = new TaskBuilder(draftTask).setId(++taskId).buildTask();
         taskRegistry.put(registeredTask.getId(), registeredTask);
         if (registeredTask.isValidTime())
             prioritizedTasks.add(registeredTask);
-        return registeredTask.getId();
+        return registeredTask;
     }
 
 
     @Override
-    public int createSubtask(Subtask draftSubtask) {
+    public Subtask createSubtask(Subtask draftSubtask) {
 
+        // Проверка во времени
         checkTaskInTime(draftSubtask);
+
+        // Проверка Id
+        if (draftSubtask.getId() != TaskManager.DRAFT_TASK_ID)
+            throw new InvalidTaskIdException("Ненулевое значение Id новой подзадачи.");
+
+        // Проверка родительского эпика
         Epic epic = epicRegistry.get(draftSubtask.getEpicId());
-        if (epic == null) {
-            return TaskManager.DRAFT_TASK_ID;
-        }
+        if (epic == null)
+            throw new InvalidTaskIdException("Недопустимый Id родительского эпика");
+
+        // Собственно, создание подзадачи
         Subtask registeredSubtask = new TaskBuilder(draftSubtask)
                 .setId(++taskId)
                 .setEpicId(epic.getId())
@@ -54,16 +65,19 @@ public class InMemoryTaskManager implements TaskManager {
                 list -> list.add(registeredSubtask.getId())));
         if (registeredSubtask.isValidTime())
             prioritizedTasks.add(registeredSubtask);
-        return registeredSubtask.getId();
+        return registeredSubtask;
     }
 
 
     @Override
-    public int createEpic(Epic draftEpic) {
+    public Epic createEpic(Epic draftEpic) {
+
+        if (draftEpic.getId() != TaskManager.DRAFT_TASK_ID)
+            throw new InvalidTaskIdException("Ненулевое значение Id нового эпика.");
 
         Epic registeredEpic = new TaskBuilder(draftEpic).setId(++taskId).buildEpic();
         epicRegistry.put(registeredEpic.getId(), registeredEpic);
-        return registeredEpic.getId();
+        return registeredEpic;
     }
 
 
@@ -71,14 +85,15 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateTask(Task task) {
 
         checkTaskInTime(task);
-        if (task.getId() != TaskManager.DRAFT_TASK_ID && taskRegistry.containsKey(task.getId())) {
-            Task oldTask = taskRegistry.get(task.getId());
-            taskRegistry.put(task.getId(), task);
-            if (oldTask.isValidTime())
-                prioritizedTasks.remove(oldTask);
-            if (task.isValidTime()) {
-                prioritizedTasks.add(task);
-            }
+        if (task.getId() == TaskManager.DRAFT_TASK_ID || !taskRegistry.containsKey(task.getId()))
+            throw new InvalidTaskIdException("Недопустимый Id задачи");
+
+        Task oldTask = taskRegistry.get(task.getId());
+        taskRegistry.put(task.getId(), task);
+        if (oldTask.isValidTime())
+            prioritizedTasks.remove(oldTask);
+        if (task.isValidTime()) {
+            prioritizedTasks.add(task);
         }
     }
 
@@ -87,17 +102,18 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateSubtask(Subtask subtask) {
 
         checkTaskInTime(subtask);
-        if (subtask.getId() != TaskManager.DRAFT_TASK_ID && subtaskRegistry.containsKey(subtask.getId())) {
-            Subtask oldSubtask = subtaskRegistry.get(subtask.getId());
-            subtaskRegistry.put(subtask.getId(), subtask);
-            // Обновление соответствующего эпика (если, конечно, подзадача привязана к эпику)
-            epicRegistry.computeIfPresent(subtask.getEpicId(),
-                    (k, epic) -> updateEpicImplicitly(epic, null));
-            if (oldSubtask.isValidTime())
-                prioritizedTasks.remove(oldSubtask);
-            if (subtask.isValidTime()) {
-                prioritizedTasks.add(subtask);
-            }
+        if (subtask.getId() == TaskManager.DRAFT_TASK_ID || !subtaskRegistry.containsKey(subtask.getId()))
+            throw new InvalidTaskIdException("Недопустимый Id подзадачи");
+
+        Subtask oldSubtask = subtaskRegistry.get(subtask.getId());
+        subtaskRegistry.put(subtask.getId(), subtask);
+        // Обновление соответствующего эпика (если, конечно, подзадача привязана к эпику)
+        epicRegistry.computeIfPresent(subtask.getEpicId(),
+                (k, epic) -> updateEpicImplicitly(epic, null));
+        if (oldSubtask.isValidTime())
+            prioritizedTasks.remove(oldSubtask);
+        if (subtask.isValidTime()) {
+            prioritizedTasks.add(subtask);
         }
     }
 
@@ -170,35 +186,35 @@ public class InMemoryTaskManager implements TaskManager {
 
 
     @Override
-    public Optional<Task> getTask(int id) {
+    public Task getTask(int id) {
 
         Task task = taskRegistry.get(id);
-        if (task != null) {
-            historyManager.add(task);
-        }
-        return Optional.ofNullable(task);
+        if (task == null)
+            throw new InvalidTaskIdException("Задача с указанным Id не найдена");
+        historyManager.add(task);
+        return task;
     }
 
 
     @Override
-    public Optional<Subtask> getSubtask(int id) {
+    public Subtask getSubtask(int id) {
 
         Subtask subtask = subtaskRegistry.get(id);
-        if (subtask != null) {
-            historyManager.add(subtask);
-        }
-        return Optional.ofNullable(subtask);
+        if (subtask == null)
+            throw new InvalidTaskIdException("Подзадача с указанным Id не найдена");
+        historyManager.add(subtask);
+        return subtask;
     }
 
 
     @Override
-    public Optional<Epic> getEpic(int id) {
+    public Epic getEpic(int id) {
 
         Epic epic = epicRegistry.get(id);
-        if (epic != null) {
-            historyManager.add(epic);
-        }
-        return Optional.ofNullable(epic);
+        if (epic == null)
+            throw new InvalidTaskIdException("Эпик с указанным Id не найден");
+        historyManager.add(epic);
+        return epic;
     }
 
 
@@ -366,7 +382,7 @@ public class InMemoryTaskManager implements TaskManager {
             if (prioritizedTasks.stream()
                     .filter(task1 -> task1.getId() != task.getId())
                     .anyMatch(task1 -> !checkTasksDisjointInTime(task1, task)))
-                throw new IllegalArgumentException("Недопустимо пересечение задач во времени");
+                throw new NotAcceptableTaskException("Недопустимое пересечение задач во времени");
         }
     }
 }

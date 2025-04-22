@@ -95,11 +95,11 @@ public class Demo {
         final int idGotoPracticum = taskManager.createTask(new TaskBuilder()
                 .setName("Сделать важное")
                 .setDescription("Записаться на курсы Yandex.Practicum")
-                .buildTask());
+                .buildTask()).getId();
         printStructured();
 
         System.out.println("Изменение наименования задачи и обновление");
-        Task taskGotoPracticum = taskManager.getTask(idGotoPracticum).orElseThrow();
+        Task taskGotoPracticum = taskManager.getTask(idGotoPracticum);
         taskGotoPracticum = new TaskBuilder(taskGotoPracticum).setName("Важное дело").buildTask();
         taskManager.updateTask(taskGotoPracticum);
         printStructured();
@@ -121,7 +121,7 @@ public class Demo {
         final int idJubilee = taskManager.createEpic(new TaskBuilder()
                 .setName("Подготовиться к юбилею")
                 .setDescription("Подготовиться к празднованию юбилея")
-                .buildEpic());
+                .buildEpic()).getId();
         printStructured();
 
         System.out.println("Добавление подзадач");
@@ -132,7 +132,7 @@ public class Demo {
                     .setDescription("Выбрать ресторан")
                     .setStartTime(jubileeDate.minusDays(30))
                     .setDuration(Duration.ofDays(1))
-                    .buildSubtask());
+                    .buildSubtask()).getId();
             taskManager.createSubtask(new TaskBuilder()
                     .setEpicId(idJubilee)
                     .setName("Гости")
@@ -153,11 +153,11 @@ public class Demo {
                     .setName("Заказ")
                     .setDescription("Заказать выбранный ресторан")
                     .setStartTime(jubileeDate.minusDays(25))
-                    .buildSubtask());
+                    .buildSubtask()).getId();
         printStructured();
 
         System.out.println("Изменение наименования последней подзадачи и обновление");
-        Subtask subOrder = taskManager.getSubtask(idOrder).orElseThrow();
+        Subtask subOrder = taskManager.getSubtask(idOrder);
         subOrder = new TaskBuilder(subOrder)
                 .setName("Бронирование")
                 .setDescription("Бронирование банкетного зала")
@@ -166,7 +166,7 @@ public class Demo {
         printStructured();
 
         System.out.println("Изменение статуса первой подзадачи и обновление");
-        Subtask subRestaurant = taskManager.getSubtask(idRestaurant).orElseThrow();
+        Subtask subRestaurant = taskManager.getSubtask(idRestaurant);
         subRestaurant = new TaskBuilder(subRestaurant).setStatus(TaskStatus.DONE).buildSubtask();
         taskManager.updateSubtask(subRestaurant);
 
