@@ -30,7 +30,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         checkTaskInTime(draftTask);
         if (draftTask.getId() != TaskManager.DRAFT_TASK_ID)
-            throw new InvalidTaskIdException("Ненулевое значение Id новой задачи.");
+            throw new NotFoundIdException("Ненулевое значение Id новой задачи.");
 
         Task registeredTask = new TaskBuilder(draftTask).setId(++taskId).buildTask();
         taskRegistry.put(registeredTask.getId(), registeredTask);
@@ -48,12 +48,12 @@ public class InMemoryTaskManager implements TaskManager {
 
         // Проверка Id
         if (draftSubtask.getId() != TaskManager.DRAFT_TASK_ID)
-            throw new InvalidTaskIdException("Ненулевое значение Id новой подзадачи.");
+            throw new NotFoundIdException("Ненулевое значение Id новой подзадачи.");
 
         // Проверка родительского эпика
         Epic epic = epicRegistry.get(draftSubtask.getEpicId());
         if (epic == null)
-            throw new InvalidTaskIdException("Недопустимый Id родительского эпика");
+            throw new NotFoundIdException("Недопустимый Id родительского эпика");
 
         // Собственно, создание подзадачи
         Subtask registeredSubtask = new TaskBuilder(draftSubtask)
@@ -73,7 +73,7 @@ public class InMemoryTaskManager implements TaskManager {
     public Epic createEpic(Epic draftEpic) {
 
         if (draftEpic.getId() != TaskManager.DRAFT_TASK_ID)
-            throw new InvalidTaskIdException("Ненулевое значение Id нового эпика.");
+            throw new NotFoundIdException("Ненулевое значение Id нового эпика.");
 
         Epic registeredEpic = new TaskBuilder(draftEpic).setId(++taskId).buildEpic();
         epicRegistry.put(registeredEpic.getId(), registeredEpic);
@@ -86,7 +86,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         checkTaskInTime(task);
         if (task.getId() == TaskManager.DRAFT_TASK_ID || !taskRegistry.containsKey(task.getId()))
-            throw new InvalidTaskIdException("Недопустимый Id задачи");
+            throw new NotFoundIdException("Недопустимый Id задачи");
 
         Task oldTask = taskRegistry.get(task.getId());
         taskRegistry.put(task.getId(), task);
@@ -103,7 +103,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         checkTaskInTime(subtask);
         if (subtask.getId() == TaskManager.DRAFT_TASK_ID || !subtaskRegistry.containsKey(subtask.getId()))
-            throw new InvalidTaskIdException("Недопустимый Id подзадачи");
+            throw new NotFoundIdException("Недопустимый Id подзадачи");
 
         Subtask oldSubtask = subtaskRegistry.get(subtask.getId());
         subtaskRegistry.put(subtask.getId(), subtask);
@@ -190,7 +190,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         Task task = taskRegistry.get(id);
         if (task == null)
-            throw new InvalidTaskIdException("Задача с указанным Id не найдена");
+            throw new NotFoundIdException("Задача с указанным Id не найдена");
         historyManager.add(task);
         return task;
     }
@@ -201,7 +201,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         Subtask subtask = subtaskRegistry.get(id);
         if (subtask == null)
-            throw new InvalidTaskIdException("Подзадача с указанным Id не найдена");
+            throw new NotFoundIdException("Подзадача с указанным Id не найдена");
         historyManager.add(subtask);
         return subtask;
     }
@@ -212,7 +212,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         Epic epic = epicRegistry.get(id);
         if (epic == null)
-            throw new InvalidTaskIdException("Эпик с указанным Id не найден");
+            throw new NotFoundIdException("Эпик с указанным Id не найден");
         historyManager.add(epic);
         return epic;
     }
@@ -382,7 +382,7 @@ public class InMemoryTaskManager implements TaskManager {
             if (prioritizedTasks.stream()
                     .filter(task1 -> task1.getId() != task.getId())
                     .anyMatch(task1 -> !checkTasksDisjointInTime(task1, task)))
-                throw new NotAcceptableTaskException("Недопустимое пересечение задач во времени");
+                throw new OverlappingTasksException("Недопустимое пересечение задач во времени");
         }
     }
 }

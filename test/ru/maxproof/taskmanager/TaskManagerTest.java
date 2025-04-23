@@ -41,14 +41,14 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 .setStartTime(now)
                 .setDuration(Duration.ofHours(2))
                 .buildTask();
-        assertThrows(TaskManager.NotAcceptableTaskException.class, () -> manager.createTask(draftTask2));
+        assertThrows(TaskManager.OverlappingTasksException.class, () -> manager.createTask(draftTask2));
 
         // Проверка задач с пересекающимся временем выполнения
         Task draftTask3 = new TaskBuilder(draftTask2)
                 .setName("T3")
                 .setStartTime(LocalDateTime.now().plusMinutes(30))
                 .buildTask();
-        assertThrows(TaskManager.NotAcceptableTaskException.class, () -> manager.createTask(draftTask3));
+        assertThrows(TaskManager.OverlappingTasksException.class, () -> manager.createTask(draftTask3));
 
         // Проверка задач с примыкающим временем выполнения
         Task draftTask4 = new TaskBuilder(draftTask2)
@@ -122,12 +122,12 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 .setName("sub")
                 .setDescription("task")
                 .buildSubtask();
-        assertThrows(TaskManager.InvalidTaskIdException.class,
+        assertThrows(TaskManager.NotFoundIdException.class,
                 () -> manager.createSubtask(wrongSubtask1));
         final Subtask wrongSubtask2 = new TaskBuilder(wrongSubtask1)
                 .setEpicId(epicSubtasks.getFirst())     // <-- wrong id
                 .buildSubtask();
-        assertThrows(TaskManager.InvalidTaskIdException.class,
+        assertThrows(TaskManager.NotFoundIdException.class,
                 () -> manager.createSubtask(wrongSubtask2));
 
         // Проверка задач с одинаковым временем старта (граничное условие)
@@ -137,7 +137,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 .setStartTime(now)
                 .setDuration(Duration.ofHours(2))
                 .buildSubtask();
-        assertThrows(TaskManager.NotAcceptableTaskException.class, () -> manager.createSubtask(draftSubtask2));
+        assertThrows(TaskManager.OverlappingTasksException.class, () -> manager.createSubtask(draftSubtask2));
 
         // Проверка задач с пересекающимся временем выполнения
         Subtask draftSubtask3 = new TaskBuilder(draftSubtask2)
@@ -145,7 +145,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 .setName("T3")
                 .setStartTime(LocalDateTime.now().plusMinutes(30))
                 .buildSubtask();
-        assertThrows(TaskManager.NotAcceptableTaskException.class, () -> manager.createSubtask(draftSubtask3));
+        assertThrows(TaskManager.OverlappingTasksException.class, () -> manager.createSubtask(draftSubtask3));
 
         // Проверка задач с примыкающим временем выполнения
         Subtask draftSubtask4 = new TaskBuilder(draftSubtask2)
@@ -228,13 +228,13 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 .setName("Other").setStartTime(now).setDuration(Duration.ofHours(1))
                 .buildTask()).getId();
         assertTrue(otherId != TaskManager.DRAFT_TASK_ID, "Недопустимый ID");
-        assertThrows(InMemoryTaskManager.NotAcceptableTaskException.class,
+        assertThrows(TaskManager.OverlappingTasksException.class,
                 () -> manager.updateTask(
                         new TaskBuilder(manager.getTask(taskId))
                                 .setStartTime(now)
                                 .setDuration(Duration.ofHours(1))
                                 .buildTask()), "Недопустимы задачи с одновременным началом");
-        assertThrows(InMemoryTaskManager.NotAcceptableTaskException.class,
+        assertThrows(TaskManager.OverlappingTasksException.class,
                 () -> manager.updateTask(
                         new TaskBuilder(manager.getTask(taskId))
                                 .setStartTime(LocalDateTime.now().plusMinutes(30))
@@ -308,7 +308,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(now, epic.getStartTime());
         assertEquals(now.plusHours(2), epic.getEndTime());
         assertEquals(Duration.ofHours(2), epic.getDuration());
-        assertThrows(TaskManager.NotAcceptableTaskException.class,
+        assertThrows(TaskManager.OverlappingTasksException.class,
                 () -> manager.updateSubtask(new TaskBuilder(manager.getSubtask(subtaskId2))
                         .setStartTime(now.plusHours(1))
                         .setDuration(Duration.ofHours(4))

@@ -14,8 +14,8 @@ public interface TaskManager {
      * <li> В случае недопустимого значения Id запрашиваемой задачи; </li>
      * <li> В случае привязки подзадачи к несуществующему эпику; </li>
      */
-    class InvalidTaskIdException extends RuntimeException {
-        public InvalidTaskIdException(String message) {
+    class NotFoundIdException extends RuntimeException {
+        public NotFoundIdException(String message) {
             super(message);
         }
     }
@@ -24,8 +24,8 @@ public interface TaskManager {
      * Класс исключения для возбуждения в случае создания или обновления
      * задачи, пересекающейся во времени с другими задачами.
      */
-    class NotAcceptableTaskException extends RuntimeException {
-        public NotAcceptableTaskException(String message) {
+    class OverlappingTasksException extends RuntimeException {
+        public OverlappingTasksException(String message) {
             super(message);
         }
     }
@@ -35,8 +35,8 @@ public interface TaskManager {
      * Регистрирует черновую задачу и возвращает ее идентификатор в реестре
      * @param draftTask Черновая простая задача с нулевым Id
      * @return Зарегистрированная задача с реальным идентификатором
-     * @throws InvalidTaskIdException если задача имеет ненулевой Id.
-     * @throws NotAcceptableTaskException если задача пересекается во времени с другой задачей.
+     * @throws NotFoundIdException если задача имеет ненулевой Id.
+     * @throws OverlappingTasksException если задача пересекается во времени с другой задачей.
      */
     Task createTask(Task draftTask);
 
@@ -44,8 +44,8 @@ public interface TaskManager {
      * Регистрирует черновую подзадачу и возвращает ее идентификатор в реестре
      * @param draftSubtask Черновая подзадача
      * @return Зарегистрированная подзадача с реальным идентификатором
-     * @throws InvalidTaskIdException если задача имеет ненулевой Id.
-     * @throws NotAcceptableTaskException если задача пересекается во времени с другой задачей.
+     * @throws NotFoundIdException если задача имеет ненулевой Id.
+     * @throws OverlappingTasksException если задача пересекается во времени с другой задачей.
      */
     Subtask createSubtask(Subtask draftSubtask);
 
@@ -53,23 +53,23 @@ public interface TaskManager {
      * Регистрирует черновую сложную задачу и возвращает ее идентификатор в реестре
      * @param draftEpic Черновая сложная задача
      * @return Зарегистрированная Epic задача с реальным идентификатором
-     * @throws InvalidTaskIdException если задача имеет ненулевой Id.
+     * @throws NotFoundIdException если задача имеет ненулевой Id.
      */
     Epic createEpic(Epic draftEpic);
 
     /**
      * Обновляет простую задачу с указанным id.
      * @param task Новая задача с указанным id
-     * @throws InvalidTaskIdException если задача имеет ненулевой Id.
-     * @throws NotAcceptableTaskException если задача пересекается во времени с другой задачей.
+     * @throws NotFoundIdException если задача имеет ненулевой Id.
+     * @throws OverlappingTasksException если задача пересекается во времени с другой задачей.
      */
     void updateTask(Task task);
 
     /**
      * Обновляет подзадачу с указанным id.
      * @param subtask Новая подзадача с указанным id
-     * @throws InvalidTaskIdException если задача имеет ненулевой Id.
-     * @throws NotAcceptableTaskException если задача пересекается во времени с другой задачей.
+     * @throws NotFoundIdException если задача имеет ненулевой Id.
+     * @throws OverlappingTasksException если задача пересекается во времени с другой задачей.
      */
     void updateSubtask(Subtask subtask);
 
@@ -129,7 +129,7 @@ public interface TaskManager {
      * Поиск задачи по идентификатору
      * @param id Идентификатор задачи
      * @return Опционально задача с заданным идентификатором
-     * @throws InvalidTaskIdException если задача с указанным Id не найдена.
+     * @throws NotFoundIdException если задача с указанным Id не найдена.
      */
     Task getTask(int id);
 
@@ -137,7 +137,7 @@ public interface TaskManager {
      * Поиск подзадачи по идентификатору
      * @param id Идентификатор подзадачи
      * @return Опционально подзадача с заданным идентификатором
-     * @throws InvalidTaskIdException если подзадача с указанным Id не найдена.
+     * @throws NotFoundIdException если подзадача с указанным Id не найдена.
      */
     Subtask getSubtask(int id);
 
@@ -145,7 +145,7 @@ public interface TaskManager {
      * Поиск Epic задачи по идентификатору
      * @param id Идентификатор Epic задачи
      * @return Опционально Epic задача с заданным идентификатором
-     * @throws InvalidTaskIdException если эпик с указанным Id не найден.
+     * @throws NotFoundIdException если эпик с указанным Id не найден.
      */
     Epic getEpic(int id);
 
