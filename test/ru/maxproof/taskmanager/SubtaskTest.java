@@ -17,25 +17,31 @@ class SubtaskTest {
     @Test
     void testEquals() {
 
-        final int epicId = manager.createEpic(new TaskBuilder().setName("epic").setDescription("description").buildEpic());
+        final int epicId = manager.createEpic(new TaskBuilder()
+                .setName("epic")
+                .setDescription("description")
+                .buildEpic()).getId();
         Subtask draftTask1 = new TaskBuilder()
+                .setEpicId(epicId)
                 .setName("abc")
                 .setDescription("def")
                 .buildSubtask();
         Subtask draftTask2 = new TaskBuilder()
+                .setEpicId(epicId)
                 .setName("abc")
                 .setDescription("def")
                 .buildSubtask();
         Subtask draftTask3 = new TaskBuilder()
+                .setEpicId(epicId)
                 .setName("sub3")
                 .setDescription("desc3")
                 .buildSubtask();
-        final int id1 = manager.createSubtask(epicId, draftTask1);
-        final int id2 = manager.createSubtask(epicId, draftTask2);
-        final int id3 = manager.createSubtask(epicId, draftTask3);
-        Subtask savedTask1 = manager.getSubtask(id1).orElseThrow();
-        Subtask savedTask2 = manager.getSubtask(id2).orElseThrow();
-        Subtask savedTask3 = manager.getSubtask(id3).orElseThrow();
+        final int id1 = manager.createSubtask(draftTask1).getId();
+        final int id2 = manager.createSubtask(draftTask2).getId();
+        final int id3 = manager.createSubtask(draftTask3).getId();
+        Subtask savedTask1 = manager.getSubtask(id1);
+        Subtask savedTask2 = manager.getSubtask(id2);
+        Subtask savedTask3 = manager.getSubtask(id3);
 
         // Черновые задачи сравниваются без учета ID
         assertEquals(draftTask1, draftTask2);
@@ -57,25 +63,28 @@ class SubtaskTest {
         final int epicId = manager.createEpic(new TaskBuilder()
                 .setName("epic")
                 .setDescription("description")
-                .buildEpic());
+                .buildEpic()).getId();
         Subtask draftTask1 = new TaskBuilder()
+                .setEpicId(epicId)
                 .setName("abc")
                 .setDescription("def")
                 .buildSubtask();
         Subtask draftTask2 = new TaskBuilder()
+                .setEpicId(epicId)
                 .setName("abc")
                 .setDescription("def")
                 .buildSubtask();
         Subtask draftTask3 = new TaskBuilder()
+                .setEpicId(epicId)
                 .setName("sub3")
                 .setDescription("desc3")
                 .buildSubtask();
-        final int id1 = manager.createSubtask(epicId, draftTask1);
-        final int id2 = manager.createSubtask(epicId, draftTask2);
-        final int id3 = manager.createSubtask(epicId, draftTask3);
-        Subtask savedTask1 = manager.getSubtask(id1).orElseThrow();
-        Subtask savedTask2 = manager.getSubtask(id2).orElseThrow();
-        Subtask savedTask3 = manager.getSubtask(id3).orElseThrow();
+        final int id1 = manager.createSubtask(draftTask1).getId();
+        final int id2 = manager.createSubtask(draftTask2).getId();
+        final int id3 = manager.createSubtask(draftTask3).getId();
+        Subtask savedTask1 = manager.getSubtask(id1);
+        Subtask savedTask2 = manager.getSubtask(id2);
+        Subtask savedTask3 = manager.getSubtask(id3);
 
         // Черновые задачи сравниваются без учета ID
         assertEquals(draftTask1.hashCode(), draftTask2.hashCode());

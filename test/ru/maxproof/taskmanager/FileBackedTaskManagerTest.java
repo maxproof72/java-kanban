@@ -27,7 +27,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
 
         // Проверка файла
         List<String> csv = Files.readAllLines(storageFile);
-        Assertions.assertEquals(csv.size(), 1);
+        Assertions.assertEquals(1, csv.size());
         Assertions.assertTrue(csv.getFirst().startsWith("id"));
         Assertions.assertEquals(6, csv.getFirst().split(",", 6).length);
 
@@ -36,13 +36,13 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         Assertions.assertTrue(manager1.isEmpty());
 
         // Создание нескольких задач
-        int epicId = manager.createEpic(new TaskBuilder().setName("epic1").buildEpic());
-        manager.createSubtask(epicId, new TaskBuilder().setName("sub1").buildSubtask());
+        int epicId = manager.createEpic(new TaskBuilder().setName("epic1").buildEpic()).getId();
+        manager.createSubtask(new TaskBuilder().setEpicId(epicId).setName("sub1").buildSubtask());
         manager.createTask(new TaskBuilder().setName("task1").buildTask());
 
         // Проверка файла с несколькими задачами
         csv = Files.readAllLines(storageFile);
-        Assertions.assertEquals(csv.size(), 4);
+        Assertions.assertEquals(4, csv.size());
         Assertions.assertTrue(csv.get(1).startsWith("3,"));
         Assertions.assertTrue(csv.get(2).startsWith("1,"));
         Assertions.assertTrue(csv.get(3).startsWith("2,"));

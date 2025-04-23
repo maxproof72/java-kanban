@@ -1,7 +1,6 @@
 package ru.maxproof.taskmanager;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface TaskManager {
 
@@ -11,35 +10,66 @@ public interface TaskManager {
     int DRAFT_TASK_ID = 0;
 
     /**
-     * Регистрирует черновую задачу и возвращает ее идентификатор в реестре
-     * @param draftTask Черновая простая задача
-     * @return Зарегистрированная задача с реальным идентификатором
+     * Класс исключения для следующих ситуаций:
+     * <li> В случае недопустимого значения Id запрашиваемой задачи; </li>
+     * <li> В случае привязки подзадачи к несуществующему эпику; </li>
      */
-    int createTask(Task draftTask);
+    class NotFoundIdException extends RuntimeException {
+        public NotFoundIdException(String message) {
+            super(message);
+        }
+    }
+
+    /**
+     * Класс исключения для возбуждения в случае создания или обновления
+     * задачи, пересекающейся во времени с другими задачами.
+     */
+    class OverlappingTasksException extends RuntimeException {
+        public OverlappingTasksException(String message) {
+            super(message);
+        }
+    }
+
+
+    /**
+     * Регистрирует черновую задачу и возвращает ее идентификатор в реестре
+     * @param draftTask Черновая простая задача с нулевым Id
+     * @return Зарегистрированная задача с реальным идентификатором
+     * @throws NotFoundIdException если задача имеет ненулевой Id.
+     * @throws OverlappingTasksException если задача пересекается во времени с другой задачей.
+     */
+    Task createTask(Task draftTask);
 
     /**
      * Регистрирует черновую подзадачу и возвращает ее идентификатор в реестре
      * @param draftSubtask Черновая подзадача
      * @return Зарегистрированная подзадача с реальным идентификатором
+     * @throws NotFoundIdException если задача имеет ненулевой Id.
+     * @throws OverlappingTasksException если задача пересекается во времени с другой задачей.
      */
-    int createSubtask(int epicId, Subtask draftSubtask);
+    Subtask createSubtask(Subtask draftSubtask);
 
     /**
      * Регистрирует черновую сложную задачу и возвращает ее идентификатор в реестре
      * @param draftEpic Черновая сложная задача
      * @return Зарегистрированная Epic задача с реальным идентификатором
+     * @throws NotFoundIdException если задача имеет ненулевой Id.
      */
-    int createEpic(Epic draftEpic);
+    Epic createEpic(Epic draftEpic);
 
     /**
      * Обновляет простую задачу с указанным id.
      * @param task Новая задача с указанным id
+     * @throws NotFoundIdException если задача имеет ненулевой Id.
+     * @throws OverlappingTasksException если задача пересекается во времени с другой задачей.
      */
     void updateTask(Task task);
 
     /**
      * Обновляет подзадачу с указанным id.
      * @param subtask Новая подзадача с указанным id
+     * @throws NotFoundIdException если задача имеет ненулевой Id.
+     * @throws OverlappingTasksException если задача пересекается во времени с другой задачей.
      */
     void updateSubtask(Subtask subtask);
 
@@ -99,22 +129,25 @@ public interface TaskManager {
      * Поиск задачи по идентификатору
      * @param id Идентификатор задачи
      * @return Опционально задача с заданным идентификатором
+     * @throws NotFoundIdException если задача с указанным Id не найдена.
      */
-    Optional<Task> getTask(int id);
+    Task getTask(int id);
 
     /**
      * Поиск подзадачи по идентификатору
      * @param id Идентификатор подзадачи
      * @return Опционально подзадача с заданным идентификатором
+     * @throws NotFoundIdException если подзадача с указанным Id не найдена.
      */
-    Optional<Subtask> getSubtask(int id);
+    Subtask getSubtask(int id);
 
     /**
      * Поиск Epic задачи по идентификатору
      * @param id Идентификатор Epic задачи
      * @return Опционально Epic задача с заданным идентификатором
+     * @throws NotFoundIdException если эпик с указанным Id не найден.
      */
-    Optional<Epic> getEpic(int id);
+    Epic getEpic(int id);
 
     /**
      * Удаление задачи с заданным идентификатором

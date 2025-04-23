@@ -19,12 +19,12 @@ class TaskTest {
         Task draftTask1 = new TaskBuilder().setName("abc").setDescription("def").buildTask();
         Task draftTask2 = new TaskBuilder().setName("abc").setDescription("def").buildTask();
         Task draftTask3 = new TaskBuilder().setName("eee").setDescription("def").buildTask();
-        final int id1 = manager.createTask(draftTask1);
-        final int id2 = manager.createTask(draftTask2);
-        final int id3 = manager.createTask(draftTask3);
-        Task savedTask1 = manager.getTask(id1).orElseThrow();
-        Task savedTask2 = manager.getTask(id2).orElseThrow();
-        Task savedTask3 = manager.getTask(id3).orElseThrow();
+        final int id1 = manager.createTask(draftTask1).getId();
+        final int id2 = manager.createTask(draftTask2).getId();
+        final int id3 = manager.createTask(draftTask3).getId();
+        Task savedTask1 = manager.getTask(id1);
+        Task savedTask2 = manager.getTask(id2);
+        Task savedTask3 = manager.getTask(id3);
 
         // Черновые задачи сравниваются без учета ID
         assertEquals(draftTask1, draftTask2);
@@ -46,12 +46,12 @@ class TaskTest {
         Task draftTask1 = new TaskBuilder().setName("abc").setDescription("def").buildTask();
         Task draftTask2 = new TaskBuilder().setName("abc").setDescription("def").buildTask();
         Task draftTask3 = new TaskBuilder().setName("eee").setDescription("def").buildTask();
-        final int id1 = manager.createTask(draftTask1);
-        final int id2 = manager.createTask(draftTask2);
-        final int id3 = manager.createTask(draftTask3);
-        Task savedTask1 = manager.getTask(id1).orElseThrow();
-        Task savedTask2 = manager.getTask(id2).orElseThrow();
-        Task savedTask3 = manager.getTask(id3).orElseThrow();
+        final int id1 = manager.createTask(draftTask1).getId();
+        final int id2 = manager.createTask(draftTask2).getId();
+        final int id3 = manager.createTask(draftTask3).getId();
+        Task savedTask1 = manager.getTask(id1);
+        Task savedTask2 = manager.getTask(id2);
+        Task savedTask3 = manager.getTask(id3);
 
         // Черновые задачи сравниваются без учета ID
         assertEquals(draftTask1.hashCode(), draftTask2.hashCode());
