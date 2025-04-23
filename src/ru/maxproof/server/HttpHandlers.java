@@ -252,5 +252,7 @@ public class HttpHandlers {
     }
 
 
-    private HttpHandlers() {}
+    private HttpHandlers() {
+
+    }
 }
