@@ -57,11 +57,11 @@ public class TaskConverter {
                 .create();
     }
 
-    static <T> T fromJson(String json, Class<T> clazz) {
+    public static <T> T fromJson(String json, Class<T> clazz) {
         return createTaskJsonConverter().fromJson(json, clazz);
     }
 
-    static String toJson(Object obj) {
+    public static String toJson(Object obj) {
         return createTaskJsonConverter().toJson(obj);
     }
 

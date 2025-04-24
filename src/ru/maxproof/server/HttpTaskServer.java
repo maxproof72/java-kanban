@@ -1,6 +1,7 @@
 package ru.maxproof.server;
 
 import com.sun.net.httpserver.HttpServer;
+import ru.maxproof.server.handlers.*;
 import ru.maxproof.taskmanager.Managers;
 import ru.maxproof.taskmanager.TaskManager;
 
@@ -23,11 +24,11 @@ public class HttpTaskServer {
         TaskManager taskManager = Managers.getDefault();
 
         // Настройка сервера
-        httpServer.createContext("/tasks", new HttpHandlers.HttpTaskHandler(taskManager));
-        httpServer.createContext("/subtasks", new HttpHandlers.HttpSubtaskHandler(taskManager));
-        httpServer.createContext("/epics", new HttpHandlers.HttpEpicsHandler(taskManager));
-        httpServer.createContext("/history", new HttpHandlers.HttpHistoryHandler(taskManager));
-        httpServer.createContext("/prioritized", new HttpHandlers.HttpPrioritizedHandler(taskManager));
+        httpServer.createContext("/tasks", new HttpTaskHandler(taskManager));
+        httpServer.createContext("/subtasks", new HttpSubtaskHandler(taskManager));
+        httpServer.createContext("/epics", new HttpEpicsHandler(taskManager));
+        httpServer.createContext("/history", new HttpHistoryHandler(taskManager));
+        httpServer.createContext("/prioritized", new HttpPrioritizedHandler(taskManager));
     }
 
     /**

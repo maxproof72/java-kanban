@@ -1,5 +1,8 @@
 package ru.maxproof.taskmanager;
 
+import ru.maxproof.exceptions.NotFoundIdException;
+import ru.maxproof.exceptions.OverlappingTasksException;
+
 import java.util.List;
 
 public interface TaskManager {
@@ -8,27 +11,6 @@ public interface TaskManager {
      * Идентификатор для незарегистрированной задачи (до передачи менеджеру задач)
      */
     int DRAFT_TASK_ID = 0;
-
-    /**
-     * Класс исключения для следующих ситуаций:
-     * <li> В случае недопустимого значения Id запрашиваемой задачи; </li>
-     * <li> В случае привязки подзадачи к несуществующему эпику; </li>
-     */
-    class NotFoundIdException extends RuntimeException {
-        public NotFoundIdException(String message) {
-            super(message);
-        }
-    }
-
-    /**
-     * Класс исключения для возбуждения в случае создания или обновления
-     * задачи, пересекающейся во времени с другими задачами.
-     */
-    class OverlappingTasksException extends RuntimeException {
-        public OverlappingTasksException(String message) {
-            super(message);
-        }
-    }
 
 
     /**
